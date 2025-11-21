@@ -3,7 +3,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { loginRequest } from "../services/auth";
 import { setAuthToken } from "../services/api";
 
-export type UserRole = "admin" | "patient";
+export type UserRole = "admin";
 
 export interface AuthUser {
   id: number;

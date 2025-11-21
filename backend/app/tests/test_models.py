@@ -7,6 +7,7 @@ from app.models.user import UserRole
 
 def test_user_role_enum():
     assert UserRole.admin.value == "admin"
+    assert len(UserRole.__members__) == 1
 
 
 def test_patient_relationships():

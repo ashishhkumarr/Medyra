@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
-from app.core.security import get_current_active_user, get_current_admin
+from app.core.security import get_current_admin
 from app.db.session import get_db
 from app.models.appointment import Appointment, AppointmentStatus
 from app.models.patient import Patient
-from app.models.user import User, UserRole
+from app.models.user import User
 from app.schemas.appointment import (
     AppointmentCreate,
     AppointmentResponse,
@@ -17,7 +17,10 @@ router = APIRouter(prefix="/appointments", tags=["appointments"])
 
 def _get_appointment(db: Session, appointment_id: int) -> Appointment:
     appointment = (
-        db.query(Appointment).filter(Appointment.id == appointment_id).first()
+        db.query(Appointment)
+        .options(selectinload(Appointment.patient))
+        .filter(Appointment.id == appointment_id)
+        .first()
     )
     if not appointment:
         raise HTTPException(
@@ -31,46 +34,25 @@ def list_appointments(
     db: Session = Depends(get_db),
     _: User = Depends(get_current_admin),
 ):
-    return db.query(Appointment).all()
-
-
-@router.get("/my", response_model=list[AppointmentResponse])
-def my_appointments(current_user: User = Depends(get_current_active_user)):
-    if current_user.role != UserRole.patient or not current_user.patient_profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No patient profile found",
-        )
-    return current_user.patient_profile.appointments
+    return (
+        db.query(Appointment)
+        .options(selectinload(Appointment.patient))
+        .all()
+    )
 
 
 @router.post("/", response_model=AppointmentResponse, status_code=status.HTTP_201_CREATED)
 def create_appointment(
     payload: AppointmentCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    _: User = Depends(get_current_admin),
 ):
-    if current_user.role == UserRole.patient:
-        profile = current_user.patient_profile
-        if not profile:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Patient profile missing",
-            )
-        payload = AppointmentCreate(
-            patient_id=profile.id,
-            doctor_name=payload.doctor_name,
-            department=payload.department,
-            appointment_datetime=payload.appointment_datetime,
-            notes=payload.notes,
-            status=AppointmentStatus.scheduled,
-        )
-    else:
-        _ensure_patient_exists(db, payload.patient_id)
+    patient = _ensure_patient_exists(db, payload.patient_id)
     appointment = Appointment(**payload.dict())
     db.add(appointment)
     db.commit()
     db.refresh(appointment)
+    appointment.patient = patient
     return appointment
 
 

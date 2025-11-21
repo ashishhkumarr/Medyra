@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.core.security import get_current_active_user, get_current_admin
+from app.core.security import get_current_admin
 from app.db.session import get_db
 from app.models.patient import Patient
-from app.models.user import User, UserRole
+from app.models.user import User
 from app.schemas.patient import (
     PatientCreate,
     PatientResponse,
@@ -31,30 +31,13 @@ def list_patients(
     return db.query(Patient).all()
 
 
-@router.get("/me", response_model=PatientResponse)
-def my_patient_profile(current_user: User = Depends(get_current_active_user)):
-    if current_user.role != UserRole.patient or not current_user.patient_profile:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Patient profile not found",
-        )
-    return current_user.patient_profile
-
-
 @router.get("/{patient_id}", response_model=PatientResponse)
 def get_patient(
     patient_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    _: User = Depends(get_current_admin),
 ):
     patient = _get_patient(db, patient_id)
-    if current_user.role == UserRole.admin:
-        return patient
-    if patient.user_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not permitted to view this patient",
-        )
     return patient
 
 

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useLocation, useNavigate, type Location } from "react-router-dom";
 
+import { Button } from "../components/ui/Button";
+import { InputField } from "../components/ui/FormField";
 import { useAuth } from "../hooks/useAuth";
 
 const LoginPage = () => {
@@ -29,44 +31,65 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100">
-      <div className="w-full max-w-md rounded-xl border bg-white p-8 shadow-xl">
-        <h1 className="text-2xl font-semibold text-center text-brand">MediTrack</h1>
-        <p className="mt-2 text-center text-sm text-slate-500">
-          Sign in to manage appointments and records
-        </p>
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <div>
-            <label className="text-sm font-medium text-slate-600">Email</label>
-            <input
+    <div className="relative flex min-h-screen items-center justify-center bg-gradient-to-br from-surface-subtle via-white to-sky-50 px-4 py-10">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(37,99,235,0.08),_transparent_45%)]" />
+      <div className="relative z-10 grid w-full max-w-5xl gap-10 md:grid-cols-2">
+        <div className="rounded-3xl border border-white/50 bg-white/70 p-8 shadow-card backdrop-blur animate-slideUp">
+          <p className="text-sm font-medium uppercase tracking-wide text-brand">Clinic Portal</p>
+          <h1 className="mt-3 text-3xl font-semibold text-slate-900">MediTrack Admin Portal</h1>
+          <p className="mt-3 text-base text-slate-500">
+            Only clinic staff can access orchestration tools for patient journeys, schedules, and communications.
+          </p>
+          <div className="mt-8 grid gap-4 text-sm text-slate-500">
+            <div className="flex items-center gap-3 rounded-2xl bg-surface-subtle p-3">
+              <div className="rounded-full bg-brand/10 p-2 text-brand">1</div>
+              Advanced scheduling intelligence
+            </div>
+            <div className="flex items-center gap-3 rounded-2xl bg-surface-subtle p-3">
+              <div className="rounded-full bg-brand/10 p-2 text-brand">2</div>
+              Unified patient insights
+            </div>
+            <div className="flex items-center gap-3 rounded-2xl bg-surface-subtle p-3">
+              <div className="rounded-full bg-brand/10 p-2 text-brand">3</div>
+              Secure medical-grade access
+            </div>
+          </div>
+        </div>
+        <div className="glass-card animate-fadeIn border border-white/60 p-8 shadow-card">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <h2 className="text-2xl font-semibold text-slate-900">Welcome Back</h2>
+              <p className="text-sm text-slate-500">Sign in with your clinic credentials.</p>
+            </div>
+            <InputField
+              label="Email address"
               type="email"
+              autoComplete="email"
               required
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className="mt-1 w-full rounded border px-3 py-2"
-              placeholder="you@example.com"
+              placeholder="clinician@meditrack.com"
             />
-          </div>
-          <div>
-            <label className="text-sm font-medium text-slate-600">Password</label>
-            <input
+            <InputField
+              label="Password"
               type="password"
+              autoComplete="current-password"
               required
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className="mt-1 w-full rounded border px-3 py-2"
-              placeholder="********"
+              placeholder="••••••••"
+              hint="Use the admin credentials from setup documentation."
             />
-          </div>
-          {error && <p className="text-sm text-red-500">{error}</p>}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded bg-brand py-2 font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
-          >
-            {loading ? "Signing in..." : "Login"}
-          </button>
-        </form>
+            {error && (
+              <div className="rounded-2xl bg-accent-rose/10 px-4 py-3 text-sm text-accent-rose">
+                {error}
+              </div>
+            )}
+            <Button type="submit" isLoading={loading} className="w-full py-3 text-base">
+              Sign In Securely
+            </Button>
+          </form>
+        </div>
       </div>
     </div>
   );

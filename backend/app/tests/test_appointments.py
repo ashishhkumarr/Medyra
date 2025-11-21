@@ -1,35 +1,24 @@
 from datetime import datetime, timedelta
 
-from app.core.security import get_password_hash
 from app.models.patient import Patient
-from app.models.user import User, UserRole
 
 from .test_auth import get_admin_headers
 
 
-def _create_patient(db_session):
-    user = User(
-        email="appt@test.com",
-        hashed_password=get_password_hash("patientpass"),
-        full_name="Appointment User",
-        role=UserRole.patient,
-    )
-    db_session.add(user)
-    db_session.commit()
-    db_session.refresh(user)
+def _create_patient(db_session) -> Patient:
     patient = Patient(
-        user_id=user.id,
-        full_name="Appointment User",
+        full_name="Appointment Patient",
         email="appt@test.com",
+        phone="555-0101",
     )
     db_session.add(patient)
     db_session.commit()
     db_session.refresh(patient)
-    return user, patient
+    return patient
 
 
 def test_admin_creates_appointment(client, db_session):
-    _, patient = _create_patient(db_session)
+    patient = _create_patient(db_session)
     headers = get_admin_headers(client)
     response = client.post(
         "/api/v1/appointments/",
@@ -47,8 +36,8 @@ def test_admin_creates_appointment(client, db_session):
     assert response.json()["doctor_name"] == "Dr. Adams"
 
 
-def test_patient_sees_own_appointments(client, db_session):
-    user, patient = _create_patient(db_session)
+def test_admin_lists_appointments_with_patient_details(client, db_session):
+    patient = _create_patient(db_session)
     headers = get_admin_headers(client)
     client.post(
         "/api/v1/appointments/",
@@ -60,14 +49,7 @@ def test_patient_sees_own_appointments(client, db_session):
             "status": "Scheduled",
         },
     )
-    login_resp = client.post(
-        "/api/v1/auth/login",
-        json={"email": user.email, "password": "patientpass"},
-    )
-    token = login_resp.json()["access_token"]
-    response = client.get(
-        "/api/v1/appointments/my",
-        headers={"Authorization": f"Bearer {token}"},
-    )
+    response = client.get("/api/v1/appointments/", headers=headers)
     assert response.status_code == 200
     assert len(response.json()) == 1
+    assert response.json()[0]["patient"]["full_name"] == patient.full_name

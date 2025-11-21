@@ -24,14 +24,13 @@ def upgrade() -> None:
         sa.Column("hashed_password", sa.String, nullable=False),
         sa.Column("full_name", sa.String, nullable=False),
         sa.Column("phone", sa.String),
-        sa.Column("role", sa.Enum("admin", "patient", name="userrole"), nullable=False),
+        sa.Column("role", sa.Enum("admin", name="userrole"), nullable=False),
         sa.Column("created_at", sa.DateTime, nullable=False),
         sa.Column("updated_at", sa.DateTime, nullable=False),
     )
     op.create_table(
         "patients",
         sa.Column("id", sa.Integer, primary_key=True),
-        sa.Column("user_id", sa.Integer, sa.ForeignKey("users.id"), unique=True),
         sa.Column("full_name", sa.String, nullable=False),
         sa.Column("date_of_birth", sa.Date),
         sa.Column("phone", sa.String),

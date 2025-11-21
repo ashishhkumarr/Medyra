@@ -4,16 +4,14 @@ from enum import Enum
 from pydantic import BaseModel, EmailStr, Field
 
 
-class UserRole(str, Enum):
-    admin = "admin"
-    patient = "patient"
-
-
 class UserBase(BaseModel):
     email: EmailStr
     full_name: str
     phone: str | None = None
-    role: UserRole = UserRole.patient
+
+
+class UserRole(str, Enum):
+    admin = "admin"
 
 
 class UserCreate(UserBase):
@@ -33,6 +31,7 @@ class UserLogin(BaseModel):
 
 class UserResponse(UserBase):
     id: int
+    role: UserRole = UserRole.admin
     created_at: datetime
     updated_at: datetime
 

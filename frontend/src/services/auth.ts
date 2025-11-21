@@ -22,7 +22,6 @@ export const registerUser = async (payload: {
   email: string;
   password: string;
   full_name: string;
-  role: string;
   phone?: string;
 }) => {
   const { data } = await apiClient.post("/auth/register", payload);

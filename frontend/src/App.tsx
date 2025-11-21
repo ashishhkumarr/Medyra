@@ -7,26 +7,22 @@ import AppointmentListPage from "./pages/AppointmentListPage";
 import CreateAppointmentPage from "./pages/CreateAppointmentPage";
 import EditProfilePage from "./pages/EditProfilePage";
 import LoginPage from "./pages/LoginPage";
-import MyAppointmentsPage from "./pages/MyAppointmentsPage";
 import NotFoundPage from "./pages/NotFoundPage";
-import PatientDashboard from "./pages/PatientDashboard";
 import PatientRecordDetailsPage from "./pages/PatientRecordDetailsPage";
-import { useAuth } from "./hooks/useAuth";
 
 const App = () => {
-  const { user } = useAuth();
 
   return (
-    <div className="min-h-screen bg-slate-100">
+    <div className="min-h-screen bg-surface-subtle">
       <Navbar />
-      <main className="mx-auto max-w-6xl px-6 py-8">
+      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route
             path="/"
             element={
               <ProtectedRoute>
-                <Navigate to={user?.role === "admin" ? "/admin" : "/patient"} replace />
+                <Navigate to="/admin" replace />
               </ProtectedRoute>
             }
           />
@@ -35,14 +31,6 @@ const App = () => {
             element={
               <ProtectedRoute roles={["admin"]}>
                 <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/patient"
-            element={
-              <ProtectedRoute roles={["patient"]}>
-                <PatientDashboard />
               </ProtectedRoute>
             }
           />
@@ -73,16 +61,8 @@ const App = () => {
           <Route
             path="/profile/edit"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute roles={["admin"]}>
                 <EditProfilePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/my-appointments"
-            element={
-              <ProtectedRoute roles={["patient"]}>
-                <MyAppointmentsPage />
               </ProtectedRoute>
             }
           />

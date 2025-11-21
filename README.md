@@ -1,6 +1,6 @@
 # MediTrack
 
-MediTrack is a production-ready patient appointment and medical records system for clinics. It pairs a FastAPI backend with a modern React + TypeScript frontend, supports JWT authentication with RBAC, schedules appointment reminder jobs, and ships with Docker assets plus AWS deployment guidance.
+MediTrack is a production-ready patient appointment and medical records system for clinics that now operates as a clean admin-only console. It pairs a FastAPI backend with a modern React + TypeScript frontend, supports JWT authentication for clinic staff, schedules appointment reminder jobs, and ships with Docker assets plus AWS deployment guidance. Patients exist only as records that receive confirmation/reminder emails—there is no patient portal or login.
 
 ```
               +-----------------------------+
@@ -24,7 +24,7 @@ MediTrack is a production-ready patient appointment and medical records system f
 
 - **Backend:** FastAPI, SQLAlchemy, Alembic, PyJWT, APScheduler, PostgreSQL
 - **Frontend:** React 18, TypeScript, Vite, React Router, React Query, TailwindCSS
-- **Auth:** JWT access tokens stored client-side, bcrypt hashing via Passlib, role enforcement middleware
+- **Auth:** Admin-only JWT access tokens stored client-side, bcrypt hashing via Passlib, strict middleware that blocks non-staff access
 - **DevOps:** Dockerfiles for frontend/backed, docker-compose (backend + frontend + Postgres + pgAdmin), AWS deployment guide with Nginx reverse proxy
 
 ## Project Structure
@@ -139,14 +139,13 @@ Stop with `docker compose down` (add `-v` to wipe Postgres volume).
 
 | Endpoint | Method | Description | Auth |
 | --- | --- | --- | --- |
-| `/api/v1/auth/login` | POST | Issue JWT token | Public |
-| `/api/v1/auth/register` | POST | Create users (admin only) | Admin |
-| `/api/v1/users/me` | GET/PUT | View/update logged-in user | Authenticated |
+| `/api/v1/auth/login` | POST | Issue JWT token for clinic admin | Public |
+| `/api/v1/auth/register` | POST | Admin creates additional staff accounts | Admin |
+| `/api/v1/users/me` | GET/PUT | View/update logged-in admin | Admin |
 | `/api/v1/patients/` | GET/POST | List or create patient records | Admin |
-| `/api/v1/patients/{id}` | GET/PUT/DELETE | Manage a patient | Admin / Owner |
-| `/api/v1/patients/me` | GET | Patient views own record | Patient |
-| `/api/v1/appointments/` | GET/POST | Admin manages appointments (patients can request via POST for themselves) | Role based |
-| `/api/v1/appointments/my` | GET | Patient-specific schedule | Patient |
+| `/api/v1/patients/{id}` | GET/PUT/DELETE | Manage a patient record | Admin |
+| `/api/v1/appointments/` | GET/POST | Admin lists or creates appointments | Admin |
+| `/api/v1/appointments/{id}` | PUT/DELETE | Update or delete an appointment | Admin |
 
 All endpoints honor JWT bearer tokens (`Authorization: Bearer <token>`). Passwords use bcrypt hashing and tokens encode `sub` + `role`.
 
@@ -158,13 +157,13 @@ All endpoints honor JWT bearer tokens (`Authorization: Bearer <token>`). Passwor
 
 - **State & Data:** React Query hooks wrap `/patients`, `/appointments`, `/users` endpoints with caching + invalidation.
 - **Auth:** Context stores token + user metadata in `localStorage`, with hydration state to avoid flicker.
-- **Routing:** `ProtectedRoute` enforces authentication and role-specific access for admin/patient dashboards.
+- **Routing:** `ProtectedRoute` enforces authentication and ensures only signed-in admins can reach app routes.
 - **UI:** Tailwind CSS provides responsive cards, forms, and dashboards. Loading + error components centralize UX states.
-- **Pages:** Login, Admin Dashboard, Patient Dashboard, Appointment List, Create Appointment, Patient Record Details, Edit Profile, My Appointments, Not Found.
+- **Pages:** Login, Admin Dashboard, Appointment List, Create Appointment, Patient Record Details, Edit Profile, Not Found.
 
 ## Default Data / Seeds
 
-On startup the backend auto-creates an admin using `ADMIN_DEFAULT_EMAIL` and `ADMIN_DEFAULT_PASSWORD`. Use those credentials to bootstrap the system, then register patients/users through the UI or API.
+On startup the backend auto-creates an admin using `ADMIN_DEFAULT_EMAIL` and `ADMIN_DEFAULT_PASSWORD`. Use those credentials to bootstrap the system, then create additional staff accounts and manage patient records through the UI or API.
 
 ## AWS Deployment Guide
 
@@ -203,7 +202,7 @@ On startup the backend auto-creates an admin using `ADMIN_DEFAULT_EMAIL` and `AD
 Add real screenshots to `docs/screenshots/` and reference them below:
 
 - ![Admin Dashboard](docs/screenshots/admin-dashboard.png "Admin dashboard placeholder")
-- ![Patient Dashboard](docs/screenshots/patient-dashboard.png "Patient dashboard placeholder")
+- ![Patient Record](docs/screenshots/patient-record.png "Patient record placeholder")
 
 ## Troubleshooting
 
@@ -216,8 +215,8 @@ Add real screenshots to `docs/screenshots/` and reference them below:
 
 - Add React component tests with Vitest + React Testing Library.
 - Hook up transactional email provider (SES, SendGrid) for production reminders.
-- Implement patient self-service appointment requests with approval workflow.
+- Layer in a calendar or kanban view for appointment triage.
 
 ---
 
-MediTrack delivers the full-stack scaffolding—from secure authentication to scheduling automation—to get a clinic operations app into production quickly. Customize modules, extend the schema, or plug in third-party services as needed. Happy shipping!
+MediTrack delivers the full-stack scaffolding—from secure admin authentication to scheduling automation—to get a clinic operations app into production quickly. Customize modules, extend the schema, or plug in third-party services as needed. Happy shipping!

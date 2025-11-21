@@ -36,9 +36,9 @@ def test_admin_can_register_user(client):
             "email": "patient@test.com",
             "password": "patientpass",
             "full_name": "Patient",
-            "role": UserRole.patient.value,
             "phone": "555-0101",
         },
     )
     assert response.status_code == 201
     assert response.json()["email"] == "patient@test.com"
+    assert response.json()["role"] == UserRole.admin.value

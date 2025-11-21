@@ -1,10 +1,12 @@
 import { apiClient } from "./api";
+import type { Patient } from "./patients";
 
 export type AppointmentStatus = "Scheduled" | "Completed" | "Cancelled";
 
 export interface Appointment {
   id: number;
   patient_id: number;
+  patient?: Patient;
   doctor_name: string;
   department?: string;
   appointment_datetime: string;
@@ -14,11 +16,6 @@ export interface Appointment {
 
 export const fetchAppointments = async (): Promise<Appointment[]> => {
   const { data } = await apiClient.get<Appointment[]>("/appointments/");
-  return data;
-};
-
-export const fetchMyAppointments = async (): Promise<Appointment[]> => {
-  const { data } = await apiClient.get<Appointment[]>("/appointments/my");
   return data;
 };
 

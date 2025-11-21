@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+import { Button } from "./ui/Button";
+import { InputField, TextAreaField } from "./ui/FormField";
 import { AppointmentStatus } from "../services/appointments";
 import { Patient } from "../services/patients";
 
@@ -45,14 +47,14 @@ export const AppointmentForm = ({ patients, onSubmit, isSubmitting }: Props) => 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="text-sm font-semibold text-slate-600">Patient</label>
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <label className="text-sm font-medium text-slate-600">
+        Patient
         <select
           name="patient_id"
           value={formState.patient_id}
           onChange={handleChange}
-          className="mt-1 w-full rounded border px-3 py-2"
+          className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
         >
           {patients.map((patient) => (
             <option key={patient.id} value={patient.id}>
@@ -60,75 +62,57 @@ export const AppointmentForm = ({ patients, onSubmit, isSubmitting }: Props) => 
             </option>
           ))}
         </select>
-      </div>
+      </label>
       <div className="grid gap-4 md:grid-cols-2">
-        <div>
-          <label className="text-sm font-semibold text-slate-600">Doctor</label>
-          <input
-            name="doctor_name"
-            value={formState.doctor_name}
-            onChange={handleChange}
-            className="mt-1 w-full rounded border px-3 py-2"
-            placeholder="Dr. Adams"
-            required
-          />
-        </div>
-        <div>
-          <label className="text-sm font-semibold text-slate-600">Department</label>
-          <input
-            name="department"
-            value={formState.department}
-            onChange={handleChange}
-            className="mt-1 w-full rounded border px-3 py-2"
-            placeholder="Cardiology"
-          />
-        </div>
-      </div>
-      <div>
-        <label className="text-sm font-semibold text-slate-600">
-          Appointment Date & Time
-        </label>
-        <input
-          type="datetime-local"
-          name="appointment_datetime"
-          value={formState.appointment_datetime}
+        <InputField
+          label="Doctor"
+          name="doctor_name"
+          value={formState.doctor_name}
           onChange={handleChange}
-          className="mt-1 w-full rounded border px-3 py-2"
+          placeholder="Dr. Adams"
           required
         />
+        <InputField
+          label="Department"
+          name="department"
+          value={formState.department}
+          onChange={handleChange}
+          placeholder="Cardiology"
+        />
       </div>
+      <InputField
+        label="Appointment Date & Time"
+        type="datetime-local"
+        name="appointment_datetime"
+        value={formState.appointment_datetime}
+        onChange={handleChange}
+        required
+      />
       <div className="grid gap-4 md:grid-cols-2">
-        <div>
-          <label className="text-sm font-semibold text-slate-600">Status</label>
+        <label className="text-sm font-medium text-slate-600">
+          Status
           <select
             name="status"
             value={formState.status}
             onChange={handleChange}
-            className="mt-1 w-full rounded border px-3 py-2"
+            className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
           >
             <option value="Scheduled">Scheduled</option>
             <option value="Completed">Completed</option>
             <option value="Cancelled">Cancelled</option>
           </select>
-        </div>
-        <div>
-          <label className="text-sm font-semibold text-slate-600">Notes</label>
-          <textarea
-            name="notes"
-            value={formState.notes}
-            onChange={handleChange}
-            className="mt-1 w-full rounded border px-3 py-2"
-            placeholder="Prep instructions..."
-          />
-        </div>
+        </label>
+        <TextAreaField
+          label="Visit Notes"
+          name="notes"
+          value={formState.notes}
+          onChange={handleChange}
+          placeholder="Add patient prep instructions or key reminders…"
+        />
       </div>
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="rounded bg-brand px-4 py-2 font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
-      >
-        {isSubmitting ? "Saving..." : "Create Appointment"}
-      </button>
+      <Button type="submit" className="w-full justify-center py-3" isLoading={isSubmitting}>
+        {isSubmitting ? "Scheduling..." : "Schedule Appointment"}
+      </Button>
     </form>
   );
 };

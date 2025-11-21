@@ -4,6 +4,10 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 
 import { ErrorState } from "../components/ErrorState";
 import { LoadingSpinner } from "../components/LoadingSpinner";
+import { Button } from "../components/ui/Button";
+import { Card } from "../components/ui/Card";
+import { InputField } from "../components/ui/FormField";
+import { SectionHeader } from "../components/ui/SectionHeader";
 import { useAuth } from "../hooks/useAuth";
 import { fetchCurrentUser, updateCurrentUser } from "../services/users";
 
@@ -39,9 +43,7 @@ const EditProfilePage = () => {
   if (isLoading) return <LoadingSpinner />;
   if (error) return <ErrorState message="Unable to load profile." />;
 
-  const handleChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setFormState((prev) => ({ ...prev, [name]: value }));
   };
@@ -57,50 +59,35 @@ const EditProfilePage = () => {
   };
 
   return (
-    <div className="rounded-xl border bg-white p-6 shadow-sm">
-      <h1 className="text-2xl font-semibold text-slate-700">Edit Profile</h1>
-      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-        <div>
-          <label className="text-sm font-semibold text-slate-600">Full Name</label>
-          <input
-            name="full_name"
-            value={formState.full_name}
-            onChange={handleChange}
-            className="mt-1 w-full rounded border px-3 py-2"
-          />
-        </div>
-        <div>
-          <label className="text-sm font-semibold text-slate-600">Phone</label>
-          <input
-            name="phone"
-            value={formState.phone}
-            onChange={handleChange}
-            className="mt-1 w-full rounded border px-3 py-2"
-          />
-        </div>
-        <div>
-          <label className="text-sm font-semibold text-slate-600">Password</label>
-          <input
-            type="password"
-            name="password"
-            value={formState.password}
-            onChange={handleChange}
-            className="mt-1 w-full rounded border px-3 py-2"
-            placeholder="Leave blank to keep current password"
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={mutation.isPending}
-          className="rounded bg-brand px-4 py-2 font-semibold text-white hover:bg-brand-dark disabled:opacity-50"
-        >
-          {mutation.isPending ? "Saving..." : "Save Changes"}
-        </button>
+    <Card className="animate-fadeIn">
+      <SectionHeader
+        title="Profile settings"
+        description="Maintain accurate information for secure clinic communication."
+      />
+      <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+        <InputField
+          label="Full name"
+          name="full_name"
+          value={formState.full_name}
+          onChange={handleChange}
+        />
+        <InputField label="Phone number" name="phone" value={formState.phone} onChange={handleChange} />
+        <InputField
+          label="Password"
+          type="password"
+          name="password"
+          value={formState.password}
+          onChange={handleChange}
+          placeholder="Leave blank to keep current password"
+        />
+        <Button type="submit" disabled={mutation.isPending} className="w-full justify-center py-3">
+          {mutation.isPending ? "Saving..." : "Save changes"}
+        </Button>
         {mutation.isSuccess && (
-          <p className="text-sm text-green-600">Profile updated.</p>
+          <p className="text-sm text-accent-emerald">Profile updated successfully.</p>
         )}
       </form>
-    </div>
+    </Card>
   );
 };
 

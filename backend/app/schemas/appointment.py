@@ -3,6 +3,8 @@ from enum import Enum
 
 from pydantic import BaseModel
 
+from app.schemas.patient import PatientResponse
+
 
 class AppointmentStatus(str, Enum):
     scheduled = "Scheduled"
@@ -33,6 +35,7 @@ class AppointmentUpdate(BaseModel):
 
 class AppointmentResponse(AppointmentBase):
     id: int
+    patient: PatientResponse | None = None
     created_at: datetime
 
     class Config:

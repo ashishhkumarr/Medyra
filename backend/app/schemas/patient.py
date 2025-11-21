@@ -11,7 +11,6 @@ class PatientBase(BaseModel):
     medical_history: str | None = None
     medications: str | None = None
     notes: str | None = None
-    user_id: int | None = None
 
 
 class PatientCreate(PatientBase):

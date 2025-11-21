@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.security import create_access_token, get_current_admin, get_password_hash, verify_password
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.schemas.user import UserCreate, UserLogin, UserResponse
 from app.db.session import get_db
 
@@ -19,6 +19,11 @@ def login(payload: UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
+        )
+    if user.role != UserRole.admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only clinic staff can access MediTrack",
         )
     token = create_access_token(
         {"sub": str(user.id), "role": user.role.value},
@@ -43,7 +48,7 @@ def register_user(
         hashed_password=get_password_hash(payload.password),
         full_name=payload.full_name,
         phone=payload.phone,
-        role=payload.role,
+        role=UserRole.admin,
     )
     db.add(user)
     db.commit()

@@ -3,12 +3,12 @@ import { apiClient } from "./api";
 export interface Patient {
   id: number;
   full_name: string;
+  date_of_birth?: string;
   email?: string;
   phone?: string;
   medical_history?: string;
   medications?: string;
   notes?: string;
-  user_id?: number;
 }
 
 export const fetchPatients = async (): Promise<Patient[]> => {
@@ -18,11 +18,6 @@ export const fetchPatients = async (): Promise<Patient[]> => {
 
 export const fetchPatient = async (patientId: number): Promise<Patient> => {
   const { data } = await apiClient.get<Patient>(`/patients/${patientId}`);
-  return data;
-};
-
-export const fetchMyPatientProfile = async (): Promise<Patient> => {
-  const { data } = await apiClient.get<Patient>("/patients/me");
   return data;
 };
 
