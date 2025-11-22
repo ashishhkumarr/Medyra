@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useLocation, useNavigate, type Location } from "react-router-dom";
+import { Link, useLocation, useNavigate, type Location } from "react-router-dom";
 
 import { Button } from "../components/ui/Button";
 import { InputField } from "../components/ui/FormField";
@@ -88,6 +88,12 @@ const LoginPage = () => {
             <Button type="submit" isLoading={loading} className="w-full py-3 text-base">
               Sign In Securely
             </Button>
+            <p className="text-center text-sm text-slate-500">
+              Need an account?{" "}
+              <Link to="/signup" className="font-semibold text-brand underline-offset-4 hover:underline">
+                Create a clinic login
+              </Link>
+            </p>
           </form>
         </div>
       </div>

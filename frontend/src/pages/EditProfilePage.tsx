@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 
@@ -13,6 +14,7 @@ import { fetchCurrentUser, updateCurrentUser } from "../services/users";
 
 const EditProfilePage = () => {
   const { user, updateUser } = useAuth();
+  const navigate = useNavigate();
   const { data, isLoading, error } = useQuery({
     queryKey: ["currentUser"],
     queryFn: fetchCurrentUser,
@@ -20,8 +22,7 @@ const EditProfilePage = () => {
   });
   const [formState, setFormState] = useState({
     full_name: data?.full_name ?? "",
-    phone: data?.phone ?? "",
-    password: ""
+    phone: data?.phone ?? ""
   });
   const mutation = useMutation({
     mutationFn: updateCurrentUser,
@@ -34,8 +35,7 @@ const EditProfilePage = () => {
     if (data) {
       setFormState({
         full_name: data.full_name ?? "",
-        phone: data.phone ?? "",
-        password: ""
+        phone: data.phone ?? ""
       });
     }
   }, [data]);
@@ -52,10 +52,8 @@ const EditProfilePage = () => {
     event.preventDefault();
     await mutation.mutateAsync({
       full_name: formState.full_name,
-      phone: formState.phone,
-      password: formState.password || undefined
+      phone: formState.phone
     });
-    setFormState((prev) => ({ ...prev, password: "" }));
   };
 
   return (
@@ -70,19 +68,21 @@ const EditProfilePage = () => {
           name="full_name"
           value={formState.full_name}
           onChange={handleChange}
-        />
+      />
         <InputField label="Phone number" name="phone" value={formState.phone} onChange={handleChange} />
-        <InputField
-          label="Password"
-          type="password"
-          name="password"
-          value={formState.password}
-          onChange={handleChange}
-          placeholder="Leave blank to keep current password"
-        />
-        <Button type="submit" disabled={mutation.isPending} className="w-full justify-center py-3">
-          {mutation.isPending ? "Saving..." : "Save changes"}
-        </Button>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <Button type="submit" disabled={mutation.isPending} className="w-full justify-center py-3 sm:w-auto">
+            {mutation.isPending ? "Saving..." : "Save changes"}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            className="w-full justify-center py-3 sm:w-auto"
+            onClick={() => navigate("/change-password")}
+          >
+            Change Password
+          </Button>
+        </div>
         {mutation.isSuccess && (
           <p className="text-sm text-accent-emerald">Profile updated successfully.</p>
         )}

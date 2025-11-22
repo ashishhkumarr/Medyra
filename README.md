@@ -2,6 +2,8 @@
 
 MediTrack is a production-ready patient appointment and medical records system for clinics that now operates as a clean admin-only console. It pairs a FastAPI backend with a modern React + TypeScript frontend, supports JWT authentication for clinic staff, schedules appointment reminder jobs, and ships with Docker assets plus AWS deployment guidance. Patients exist only as records that receive confirmation/reminder emails—there is no patient portal or login.
 
+Clinic staff can now self-serve onboarding: sign up from the web app to create your admin/doctor account, then log in immediately. A seeded default admin still exists for local/dev but is no longer required for first-run access.
+
 ```
               +-----------------------------+
               |         React / Vite        |
@@ -104,6 +106,8 @@ npm run dev
 
 The Vite dev server proxies `/api/*` to `http://localhost:8000`.
 
+Once both services are running, visit `http://localhost:5173/signup` to create your clinic admin/doctor account, then log in. The seeded admin (`ADMIN_DEFAULT_EMAIL` / `ADMIN_DEFAULT_PASSWORD`) remains available for fallback/local testing.
+
 ### Automated Tests
 
 Backend `pytest` suite covers authentication, CRUD flows, ORM behavior, and security helpers:
@@ -135,13 +139,28 @@ Services:
 
 Stop with `docker compose down` (add `-v` to wipe Postgres volume).
 
+### Dev Hot-Reload (Docker)
+
+For live reload of both backend (uvicorn --reload) and frontend (Vite dev server) without rebuilding on every change:
+
+```bash
+docker compose -f docker-compose.dev.yml up --build
+```
+
+- Backend: mounts `backend/app` and runs on `http://localhost:8000`.
+- Frontend: mounts `frontend`, runs Vite dev server on `http://localhost:5173`.
+- Node modules are stored in a container volume (`frontend_node_modules`) to avoid clobbering host files.
+- Database/pgAdmin run the same as production compose for local dev convenience.
+
 ## API Summary
 
 | Endpoint | Method | Description | Auth |
 | --- | --- | --- | --- |
+| `/api/v1/auth/signup` | POST | Public signup for clinic admins/doctors (returns JWT) | Public |
 | `/api/v1/auth/login` | POST | Issue JWT token for clinic admin | Public |
 | `/api/v1/auth/register` | POST | Admin creates additional staff accounts | Admin |
 | `/api/v1/users/me` | GET/PUT | View/update logged-in admin | Admin |
+| `/api/v1/users/change-password` | POST | Change current user password (requires old password) | Admin |
 | `/api/v1/patients/` | GET/POST | List or create patient records | Admin |
 | `/api/v1/patients/{id}` | GET/PUT/DELETE | Manage a patient record | Admin |
 | `/api/v1/appointments/` | GET/POST | Admin lists or creates appointments | Admin |
@@ -163,7 +182,7 @@ All endpoints honor JWT bearer tokens (`Authorization: Bearer <token>`). Passwor
 
 ## Default Data / Seeds
 
-On startup the backend auto-creates an admin using `ADMIN_DEFAULT_EMAIL` and `ADMIN_DEFAULT_PASSWORD`. Use those credentials to bootstrap the system, then create additional staff accounts and manage patient records through the UI or API.
+On startup the backend auto-creates an admin using `ADMIN_DEFAULT_EMAIL` and `ADMIN_DEFAULT_PASSWORD` for local/dev. In production or normal flows, create a new admin/doctor from the `/signup` page, which issues a JWT and logs you in immediately.
 
 ## AWS Deployment Guide
 

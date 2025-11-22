@@ -9,6 +9,8 @@ import EditProfilePage from "./pages/EditProfilePage";
 import LoginPage from "./pages/LoginPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import PatientRecordDetailsPage from "./pages/PatientRecordDetailsPage";
+import SignupPage from "./pages/SignupPage";
+import ChangePasswordPage from "./pages/ChangePasswordPage";
 
 const App = () => {
 
@@ -18,6 +20,7 @@ const App = () => {
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
           <Route
             path="/"
             element={
@@ -63,6 +66,14 @@ const App = () => {
             element={
               <ProtectedRoute roles={["admin"]}>
                 <EditProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/change-password"
+            element={
+              <ProtectedRoute roles={["admin"]}>
+                <ChangePasswordPage />
               </ProtectedRoute>
             }
           />

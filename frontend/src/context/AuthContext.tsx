@@ -9,8 +9,22 @@ export interface AuthUser {
   id: number;
   email: string;
   full_name: string;
+  first_name?: string | null;
+  last_name?: string | null;
   role: UserRole;
   phone?: string | null;
+  specialty?: string | null;
+  license_number?: string | null;
+  license_state?: string | null;
+  license_country?: string | null;
+  npi_number?: string | null;
+  taxonomy_code?: string | null;
+  clinic_name?: string | null;
+  clinic_address?: string | null;
+  clinic_city?: string | null;
+  clinic_state?: string | null;
+  clinic_zip?: string | null;
+  clinic_country?: string | null;
 }
 
 interface AuthState {
