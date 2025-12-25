@@ -1,0 +1,78 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --color-bg: 245 247 251;
+  --color-surface: 255 255 255;
+  --color-surface-subtle: 241 245 249;
+  --color-surface-muted: 226 232 240;
+  --color-text: 15 23 42;
+  --color-text-muted: 71 85 105;
+  --color-text-subtle: 100 116 139;
+  --color-border: 226 232 240;
+  --color-primary: 15 118 110;
+  --color-primary-strong: 13 74 110;
+  --color-primary-soft: 204 251 241;
+  --color-secondary: 59 130 246;
+  --color-secondary-soft: 219 234 254;
+  --color-success: 16 185 129;
+  --color-success-soft: 209 250 229;
+  --color-warning: 245 158 11;
+  --color-warning-soft: 254 243 199;
+  --color-danger: 239 68 68;
+  --color-danger-soft: 254 226 226;
+}
+
+.dark {
+  color-scheme: dark;
+  --color-bg: 12 17 27;
+  --color-surface: 15 23 42;
+  --color-surface-subtle: 30 41 59;
+  --color-surface-muted: 51 65 85;
+  --color-text: 226 232 240;
+  --color-text-muted: 148 163 184;
+  --color-text-subtle: 100 116 139;
+  --color-border: 51 65 85;
+  --color-primary: 45 212 191;
+  --color-primary-strong: 20 184 166;
+  --color-primary-soft: 13 74 110;
+  --color-secondary: 96 165 250;
+  --color-secondary-soft: 30 64 175;
+  --color-success: 52 211 153;
+  --color-success-soft: 6 95 70;
+  --color-warning: 251 191 36;
+  --color-warning-soft: 120 53 15;
+  --color-danger: 248 113 113;
+  --color-danger-soft: 127 29 29;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: rgb(var(--color-bg));
+  color: rgb(var(--color-text));
+  font-family: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  font-size: 16px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.glass-card {
+  @apply rounded-3xl border border-border/60 bg-surface shadow-card transition-all duration-200;
+}
+
+.section-heading {
+  @apply text-lg font-semibold text-text;
+}
