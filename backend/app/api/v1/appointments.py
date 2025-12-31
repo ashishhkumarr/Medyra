@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session, selectinload
 
 from app.core.config import settings
@@ -14,6 +14,7 @@ from app.schemas.appointment import (
     AppointmentResponse,
     AppointmentUpdate,
 )
+from app.services.audit_log import log_event
 from app.services.email import (
     build_cancellation_email,
     build_confirmation_email,
@@ -25,11 +26,16 @@ router = APIRouter(prefix="/appointments", tags=["appointments"])
 DEFAULT_DOCTOR_NAME = "TBD"
 
 
-def _get_appointment(db: Session, appointment_id: int) -> Appointment:
+def _get_appointment(
+    db: Session, appointment_id: int, owner_user_id: int
+) -> Appointment:
     appointment = (
         db.query(Appointment)
         .options(selectinload(Appointment.patient))
-        .filter(Appointment.id == appointment_id)
+        .filter(
+            Appointment.id == appointment_id,
+            Appointment.owner_user_id == owner_user_id,
+        )
         .first()
     )
     if not appointment:
@@ -74,6 +80,7 @@ def _assert_no_overlapping_appointments(
     db: Session,
     start_time,
     end_time,
+    owner_user_id: int,
     appointment_id: int | None = None,
 ):
     effective_end_time = _resolve_end_time(start_time, end_time)
@@ -81,7 +88,8 @@ def _assert_no_overlapping_appointments(
         return
 
     query = db.query(Appointment).filter(
-        Appointment.status == AppointmentStatus.scheduled
+        Appointment.status == AppointmentStatus.scheduled,
+        Appointment.owner_user_id == owner_user_id,
     )
     if appointment_id is not None:
         query = query.filter(Appointment.id != appointment_id)
@@ -130,6 +138,15 @@ def _has_update_changes(old: dict, appointment: Appointment) -> bool:
             old["status"] != appointment.status,
         ]
     )
+
+
+def _build_update_metadata(old: dict, appointment: Appointment) -> dict:
+    changes = {}
+    for field, old_value in old.items():
+        new_value = getattr(appointment, field)
+        if old_value != new_value:
+            changes[field] = {"old": old_value, "new": new_value}
+    return {"changed_fields": list(changes.keys()), "changes": changes}
 
 
 def _patient_email(patient: Patient) -> str | None:
@@ -230,11 +247,12 @@ def _apply_appointment_update(appointment: Appointment, update_data: dict) -> Ap
 @router.get("/", response_model=list[AppointmentResponse])
 def list_appointments(
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_admin),
+    current_user: User = Depends(get_current_admin),
 ):
     return (
         db.query(Appointment)
         .options(selectinload(Appointment.patient))
+        .filter(Appointment.owner_user_id == current_user.id)
         .all()
     )
 
@@ -243,11 +261,13 @@ def list_appointments(
 def create_appointment(
     payload: AppointmentCreate,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_admin),
+    current_user: User = Depends(get_current_admin),
+    request: Request = None,
 ):
-    patient = _ensure_patient_exists(db, payload.patient_id)
+    patient = _ensure_patient_exists(db, payload.patient_id, current_user.id)
     payload_data = payload.dict(exclude_unset=True)
     payload_data["doctor_name"] = _normalize_doctor_name(payload_data.get("doctor_name"))
+    payload_data["owner_user_id"] = current_user.id
     _validate_time_range(
         payload_data.get("appointment_datetime"),
         payload_data.get("appointment_end_datetime"),
@@ -258,6 +278,7 @@ def create_appointment(
             db,
             payload_data.get("appointment_datetime"),
             payload_data.get("appointment_end_datetime"),
+            current_user.id,
         )
     appointment = Appointment(**payload_data)
     db.add(appointment)
@@ -265,6 +286,21 @@ def create_appointment(
     db.refresh(appointment)
     appointment.patient = patient
     _send_confirmation_email(db, appointment, patient)
+    log_event(
+        db,
+        current_user,
+        action="appointment.create",
+        entity_type="appointment",
+        entity_id=appointment.id,
+        summary="Created appointment",
+        metadata={
+            "patient_id": appointment.patient_id,
+            "appointment_datetime": appointment.appointment_datetime,
+            "appointment_end_datetime": appointment.appointment_end_datetime,
+            "status": appointment.status,
+        },
+        request=request,
+    )
     return appointment
 
 
@@ -273,9 +309,10 @@ def update_appointment(
     appointment_id: int,
     payload: AppointmentUpdate,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_admin),
+    current_user: User = Depends(get_current_admin),
+    request: Request = None,
 ):
-    appointment = _get_appointment(db, appointment_id)
+    appointment = _get_appointment(db, appointment_id, current_user.id)
     old_snapshot = _snapshot_appointment(appointment)
     update_data = _prepare_update_data(payload)
     start_time = update_data.get("appointment_datetime", appointment.appointment_datetime)
@@ -288,12 +325,44 @@ def update_appointment(
     _validate_time_range(start_time, end_time)
     if status_value == AppointmentStatus.scheduled:
         _assert_no_overlapping_appointments(
-            db, start_time, end_time, appointment_id=appointment.id
+            db,
+            start_time,
+            end_time,
+            current_user.id,
+            appointment_id=appointment.id,
         )
     _apply_appointment_update(appointment, update_data)
     db.add(appointment)
     db.commit()
     db.refresh(appointment)
+    metadata = _build_update_metadata(old_snapshot, appointment)
+    action = "appointment.update"
+    if old_snapshot["status"] != appointment.status:
+        if appointment.status == AppointmentStatus.cancelled:
+            action = "appointment.cancel"
+        elif appointment.status == AppointmentStatus.completed:
+            action = "appointment.complete"
+    elif old_snapshot["appointment_datetime"] != appointment.appointment_datetime or (
+        old_snapshot["appointment_end_datetime"] != appointment.appointment_end_datetime
+    ):
+        action = "appointment.reschedule"
+    summary = "Updated appointment"
+    if action == "appointment.reschedule":
+        summary = "Rescheduled appointment"
+    if action == "appointment.cancel":
+        summary = "Cancelled appointment"
+    if action == "appointment.complete":
+        summary = "Completed appointment"
+    log_event(
+        db,
+        current_user,
+        action=action,
+        entity_type="appointment",
+        entity_id=appointment.id,
+        summary=summary,
+        metadata=metadata,
+        request=request,
+    )
     if appointment.status == AppointmentStatus.cancelled:
         if old_snapshot["status"] != AppointmentStatus.cancelled:
             _send_cancellation_email(db, appointment, appointment.patient, old_snapshot)
@@ -309,9 +378,10 @@ def patch_appointment(
     appointment_id: int,
     payload: AppointmentUpdate,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_admin),
+    current_user: User = Depends(get_current_admin),
+    request: Request = None,
 ):
-    appointment = _get_appointment(db, appointment_id)
+    appointment = _get_appointment(db, appointment_id, current_user.id)
     old_snapshot = _snapshot_appointment(appointment)
     update_data = _prepare_update_data(payload)
     start_time = update_data.get("appointment_datetime", appointment.appointment_datetime)
@@ -324,12 +394,44 @@ def patch_appointment(
     _validate_time_range(start_time, end_time)
     if status_value == AppointmentStatus.scheduled:
         _assert_no_overlapping_appointments(
-            db, start_time, end_time, appointment_id=appointment.id
+            db,
+            start_time,
+            end_time,
+            current_user.id,
+            appointment_id=appointment.id,
         )
     _apply_appointment_update(appointment, update_data)
     db.add(appointment)
     db.commit()
     db.refresh(appointment)
+    metadata = _build_update_metadata(old_snapshot, appointment)
+    action = "appointment.update"
+    if old_snapshot["status"] != appointment.status:
+        if appointment.status == AppointmentStatus.cancelled:
+            action = "appointment.cancel"
+        elif appointment.status == AppointmentStatus.completed:
+            action = "appointment.complete"
+    elif old_snapshot["appointment_datetime"] != appointment.appointment_datetime or (
+        old_snapshot["appointment_end_datetime"] != appointment.appointment_end_datetime
+    ):
+        action = "appointment.reschedule"
+    summary = "Updated appointment"
+    if action == "appointment.reschedule":
+        summary = "Rescheduled appointment"
+    if action == "appointment.cancel":
+        summary = "Cancelled appointment"
+    if action == "appointment.complete":
+        summary = "Completed appointment"
+    log_event(
+        db,
+        current_user,
+        action=action,
+        entity_type="appointment",
+        entity_id=appointment.id,
+        summary=summary,
+        metadata=metadata,
+        request=request,
+    )
     if appointment.status == AppointmentStatus.cancelled:
         if old_snapshot["status"] != AppointmentStatus.cancelled:
             _send_cancellation_email(db, appointment, appointment.patient, old_snapshot)
@@ -344,15 +446,26 @@ def patch_appointment(
 def cancel_appointment(
     appointment_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_admin),
+    current_user: User = Depends(get_current_admin),
+    request: Request = None,
 ):
-    appointment = _get_appointment(db, appointment_id)
+    appointment = _get_appointment(db, appointment_id, current_user.id)
     if appointment.status != AppointmentStatus.cancelled:
         old_snapshot = _snapshot_appointment(appointment)
         appointment.status = AppointmentStatus.cancelled
         db.add(appointment)
         db.commit()
         db.refresh(appointment)
+        log_event(
+            db,
+            current_user,
+            action="appointment.cancel",
+            entity_type="appointment",
+            entity_id=appointment.id,
+            summary="Cancelled appointment",
+            metadata={"status": appointment.status},
+            request=request,
+        )
         _send_cancellation_email(db, appointment, appointment.patient, old_snapshot)
     return appointment
 
@@ -361,14 +474,25 @@ def cancel_appointment(
 def complete_appointment(
     appointment_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_admin),
+    current_user: User = Depends(get_current_admin),
+    request: Request = None,
 ):
-    appointment = _get_appointment(db, appointment_id)
+    appointment = _get_appointment(db, appointment_id, current_user.id)
     if appointment.status != AppointmentStatus.completed:
         appointment.status = AppointmentStatus.completed
         db.add(appointment)
         db.commit()
         db.refresh(appointment)
+        log_event(
+            db,
+            current_user,
+            action="appointment.complete",
+            entity_type="appointment",
+            entity_id=appointment.id,
+            summary="Completed appointment",
+            metadata={"status": appointment.status},
+            request=request,
+        )
     return appointment
 
 
@@ -376,15 +500,30 @@ def complete_appointment(
 def delete_appointment(
     appointment_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_admin),
+    current_user: User = Depends(get_current_admin),
+    request: Request = None,
 ):
-    appointment = _get_appointment(db, appointment_id)
+    appointment = _get_appointment(db, appointment_id, current_user.id)
     db.delete(appointment)
     db.commit()
+    log_event(
+        db,
+        current_user,
+        action="appointment.delete",
+        entity_type="appointment",
+        entity_id=appointment.id,
+        summary="Deleted appointment",
+        request=request,
+    )
 
-
-def _ensure_patient_exists(db: Session, patient_id: int) -> Patient:
-    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+def _ensure_patient_exists(
+    db: Session, patient_id: int, owner_user_id: int
+) -> Patient:
+    patient = (
+        db.query(Patient)
+        .filter(Patient.id == patient_id, Patient.owner_user_id == owner_user_id)
+        .first()
+    )
     if not patient:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Patient not found"

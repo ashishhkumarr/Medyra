@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.core.security import (
@@ -10,6 +10,7 @@ from app.core.security import (
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.user import PasswordChange, UserResponse, UserUpdate
+from app.services.audit_log import log_event
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -75,8 +76,9 @@ def update_me(
 
 def _apply_password_change(
     payload: PasswordChange,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    db: Session,
+    current_user: User,
+    request: Request,
 ):
     if not verify_password(payload.old_password, current_user.hashed_password):
         raise HTTPException(
@@ -86,6 +88,15 @@ def _apply_password_change(
     current_user.hashed_password = get_password_hash(payload.new_password)
     db.add(current_user)
     db.commit()
+    log_event(
+        db,
+        current_user,
+        action="auth.change_password",
+        entity_type="user",
+        entity_id=current_user.id,
+        summary="Password changed",
+        request=request,
+    )
     return {"detail": "Password updated successfully"}
 
 
@@ -94,8 +105,9 @@ def change_password_post(
     payload: PasswordChange,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
+    request: Request = None,
 ):
-    return _apply_password_change(payload, db, current_user)
+    return _apply_password_change(payload, db, current_user, request)
 
 
 @router.put("/change-password", operation_id="change_password_put")
@@ -103,8 +115,9 @@ def change_password_put(
     payload: PasswordChange,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
+    request: Request = None,
 ):
-    return _apply_password_change(payload, db, current_user)
+    return _apply_password_change(payload, db, current_user, request)
 
 
 @router.get("/", response_model=list[UserResponse])

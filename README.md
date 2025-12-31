@@ -4,6 +4,8 @@ MediTrack is a production-ready patient appointment and medical records system f
 
 Clinic staff can now self-serve onboarding: sign up from the web app to create your admin/doctor account, then log in immediately. A seeded default admin still exists for local/dev but is no longer required for first-run access.
 
+MediTrack is multi-tenant: each account has isolated data.
+
 ```
               +-----------------------------+
               |         React / Vite        |
@@ -77,8 +79,6 @@ REMINDER_HOURS_BEFORE=24
 VITE_API_BASE_URL=http://localhost:8000/api/v1
 ```
 
-<<<<<<< HEAD
-=======
 ## Dev Setup
 
 Backend (clean install):
@@ -100,7 +100,6 @@ npm install
 cp .env.example .env
 ```
 
->>>>>>> v2
 ## Running Locally
 
 ### Backend
@@ -163,15 +162,12 @@ Services:
 
 Stop with `docker compose down` (add `-v` to wipe Postgres volume).
 
-<<<<<<< HEAD
-=======
 Dev reset workflow:
 
 ```bash
 docker compose down -v && docker compose up --build
 ```
 
->>>>>>> v2
 ### Dev Hot-Reload (Docker)
 
 For live reload of both backend (uvicorn --reload) and frontend (Vite dev server) without rebuilding on every change:
@@ -184,6 +180,32 @@ docker compose -f docker-compose.dev.yml up --build
 - Frontend: mounts `frontend`, runs Vite dev server on `http://localhost:5173`.
 - Node modules are stored in a container volume (`frontend_node_modules`) to avoid clobbering host files.
 - Database/pgAdmin run the same as production compose for local dev convenience.
+
+## Demo mode / Not for real patient data
+
+MediTrack includes demo guardrails. **Do not enter real patient data** in demo environments.
+
+- The UI shows a persistent demo-only banner.
+- Signup requires acknowledging the demo notice.
+- A demo seed endpoint creates synthetic patients/appointments (no PHI).
+
+Seed demo data (admin auth required):
+
+```
+POST /api/v1/admin/seed-demo
+```
+
+This endpoint is gated by `DEMO_MODE=true` (default in `backend/.env.example`) and is idempotent.
+
+To reset the demo database:
+
+```bash
+docker compose down -v && docker compose up --build
+```
+
+## Audit logs
+
+MediTrack records an audit trail for key actions (auth, patients, appointments, reminders). Logs are scoped per user and can be queried via `GET /api/v1/audit-logs/` with filters like `action`, `entity_type`, and `since`.
 
 ## API Summary
 
@@ -217,8 +239,6 @@ All endpoints honor JWT bearer tokens (`Authorization: Bearer <token>`). Passwor
 
 On startup the backend auto-creates an admin using `ADMIN_DEFAULT_EMAIL` and `ADMIN_DEFAULT_PASSWORD` for local/dev. In production or normal flows, create a new admin/doctor from the `/signup` page, which issues a JWT and logs you in immediately.
 
-<<<<<<< HEAD
-=======
 ## Deployment
 
 Required environment variables:
@@ -251,7 +271,6 @@ Ports and URLs:
 - Backend: `http://<host>:8000` (`/api/v1` for API routes)
 - Frontend: `http://<host>:5173` (Dockerized production build via nginx)
 
->>>>>>> v2
 ## AWS Deployment Guide
 
 1. **Provision EC2:** Launch Ubuntu 22.04 LTS, open ports 22, 80, 443 in the security group.

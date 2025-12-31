@@ -2,6 +2,7 @@ from datetime import date, datetime, timedelta
 
 from app.models.appointment import Appointment, AppointmentStatus
 from app.models.patient import Patient
+from app.models.user import User
 
 from .test_auth import get_admin_headers
 
@@ -23,11 +24,13 @@ def test_admin_can_create_patient(client):
 
 
 def test_admin_can_view_patient_details(client, db_session):
+    admin = db_session.query(User).first()
     patient = Patient(
         full_name="View Only",
         date_of_birth=date(1988, 5, 5),
         email="view@example.com",
         phone="555-8888",
+        owner_user_id=admin.id,
     )
     db_session.add(patient)
     db_session.commit()
@@ -45,7 +48,12 @@ def test_patient_routes_require_authentication(client):
 
 
 def test_admin_can_update_patient_notes(client, db_session):
-    patient = Patient(full_name="Notes Patient", notes="Initial note")
+    admin = db_session.query(User).first()
+    patient = Patient(
+        full_name="Notes Patient",
+        notes="Initial note",
+        owner_user_id=admin.id,
+    )
     db_session.add(patient)
     db_session.commit()
     db_session.refresh(patient)
@@ -61,10 +69,12 @@ def test_admin_can_update_patient_notes(client, db_session):
 
 
 def test_admin_can_export_patient_record_pdf(client, db_session):
+    admin = db_session.query(User).first()
     patient = Patient(
         full_name="Export Patient",
         email="export@example.com",
         phone="555-1212",
+        owner_user_id=admin.id,
     )
     db_session.add(patient)
     db_session.commit()
@@ -77,6 +87,7 @@ def test_admin_can_export_patient_record_pdf(client, db_session):
         appointment_end_datetime=datetime.utcnow() + timedelta(days=1, minutes=30),
         status=AppointmentStatus.scheduled,
         notes="Initial visit",
+        owner_user_id=admin.id,
     )
     db_session.add(appointment)
     db_session.commit()

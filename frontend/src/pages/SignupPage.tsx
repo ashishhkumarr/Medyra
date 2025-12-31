@@ -24,6 +24,7 @@ type FormState = {
   clinic_country: string;
   password: string;
   confirm_password: string;
+  acknowledgeDemo: boolean;
 };
 
 const initialState: FormState = {
@@ -44,7 +45,8 @@ const initialState: FormState = {
   clinic_zip: "",
   clinic_country: "",
   password: "",
-  confirm_password: ""
+  confirm_password: "",
+  acknowledgeDemo: false
 };
 
 const SignupPage = () => {
@@ -79,8 +81,15 @@ const SignupPage = () => {
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) => {
-    const { name, value } = event.target;
-    setFormState((prev) => ({ ...prev, [name]: value }));
+    const target = event.target;
+    const nextValue =
+      target instanceof HTMLInputElement && target.type === "checkbox"
+        ? target.checked
+        : target.value;
+    setFormState((prev) => ({
+      ...prev,
+      [target.name]: nextValue
+    }) as FormState);
   };
 
   useEffect(() => {
@@ -110,8 +119,16 @@ const SignupPage = () => {
     if (formState.password !== formState.confirm_password) {
       nextErrors.confirm_password = "Passwords must match";
     }
+    if (!formState.acknowledgeDemo) {
+      nextErrors.acknowledgeDemo = "Required";
+    }
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
+  };
+
+  const buildSignupPayload = () => {
+    const { acknowledgeDemo, ...payload } = formState;
+    return payload;
   };
 
   const getApiErrorMessage = (error: any) => {
@@ -148,7 +165,7 @@ const SignupPage = () => {
     }
     setVerifyingOtp(true);
     try {
-      await verifySignupOtp({ ...formState, otp });
+      await verifySignupOtp({ ...buildSignupPayload(), otp });
       navigate("/login");
     } catch (error: any) {
       setApiError(getApiErrorMessage(error));
@@ -321,6 +338,23 @@ const SignupPage = () => {
                   onChange={handleChange}
                   error={errors.confirm_password}
                 />
+              </div>
+              <div className="rounded-2xl border border-border/60 bg-surface-subtle p-4">
+                <label className="flex items-start gap-3 text-sm text-text">
+                  <input
+                    type="checkbox"
+                    name="acknowledgeDemo"
+                    checked={formState.acknowledgeDemo}
+                    onChange={handleChange}
+                    className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                  />
+                  <span>
+                    I understand this is a demo and I will not enter real patient data.
+                  </span>
+                </label>
+                {errors.acknowledgeDemo && (
+                  <p className="mt-2 text-xs text-danger">{errors.acknowledgeDemo}</p>
+                )}
               </div>
             </>
           )}

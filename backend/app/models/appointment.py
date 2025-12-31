@@ -18,6 +18,7 @@ class Appointment(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     patient_id = Column(Integer, ForeignKey("patients.id"), nullable=False)
+    owner_user_id = Column(Integer, ForeignKey("users.id"), index=True, nullable=True)
     doctor_name = Column(String, nullable=False)
     department = Column(String, nullable=True)
     appointment_datetime = Column(DateTime, nullable=False)

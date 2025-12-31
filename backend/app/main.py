@@ -1,15 +1,22 @@
+import json
 import logging
 from contextlib import asynccontextmanager
+from uuid import uuid4
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import DateTime, String, Text, inspect, text
+from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from sqlalchemy import DateTime, Integer, String, Text, inspect, text
 
-from app.api.v1 import appointments, auth, patients, reminders, users
+from app.api.v1 import admin, appointments, audit_logs, auth, patients, reminders, users
 from app.core.config import settings
+from app.core.limiter import limiter
 from app.core.security import get_password_hash
 from app.db import base  # noqa: F401 ensures models imported
 from app.db.session import SessionLocal, engine
+from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.models.user import User, UserRole
 from app.services.reminder_service import scheduler
 
@@ -24,10 +31,16 @@ def ensure_schema_columns():
             ("last_name", String()),
             ("sex", String()),
             ("address", Text()),
+            ("owner_user_id", Integer()),
         ],
         "appointments": [
             ("appointment_end_datetime", DateTime()),
             ("reminder_sent_at", DateTime()),
+            ("owner_user_id", Integer()),
+        ],
+        "users": [
+            ("failed_login_attempts", Integer()),
+            ("locked_until", DateTime()),
         ],
     }
 
@@ -94,6 +107,39 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+app.state.limiter = limiter
+app.add_middleware(SlowAPIMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
+
+
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(_: Request, __: RateLimitExceeded):
+    return JSONResponse(
+        status_code=429,
+        content={"detail": "Too many requests. Please try again later."},
+    )
+
+
+@app.middleware("http")
+async def add_request_id(request: Request, call_next):
+    request.state.request_id = str(uuid4())
+    if request.method == "POST" and request.url.path.startswith(
+        f"{settings.API_V1_STR}/auth/"
+    ):
+        body = await request.body()
+        if body:
+            try:
+                payload = json.loads(body.decode("utf-8"))
+                email = payload.get("email")
+                if isinstance(email, str):
+                    request.state.normalized_email = email.strip().lower()
+            except json.JSONDecodeError:
+                pass
+        request._body = body
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = request.state.request_id
+    return response
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -107,6 +153,8 @@ app.include_router(users.router, prefix=settings.API_V1_STR)
 app.include_router(patients.router, prefix=settings.API_V1_STR)
 app.include_router(appointments.router, prefix=settings.API_V1_STR)
 app.include_router(reminders.router, prefix=settings.API_V1_STR)
+app.include_router(admin.router, prefix=settings.API_V1_STR)
+app.include_router(audit_logs.router, prefix=settings.API_V1_STR)
 
 
 @app.get("/")

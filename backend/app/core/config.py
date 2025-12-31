@@ -19,6 +19,12 @@ class Settings(BaseSettings):
     SMTP_FROM: str | None = None
     SMTP_USE_TLS: bool = True
     EMAIL_ENABLED: bool = False
+    DEMO_MODE: bool = True
+    MAX_LOGIN_ATTEMPTS: int = 5
+    LOGIN_LOCK_MINUTES: int = 15
+    ENV: str = "development"
+    CSP_ENABLED: bool = True
+    HSTS_ENABLED: bool = False
     REMINDER_HOURS_BEFORE: int = 24
     REMINDER_WINDOW_HOURS: int = 24
     REMINDER_LOOKAHEAD_MINUTES: int = 5

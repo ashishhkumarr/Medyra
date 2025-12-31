@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from io import BytesIO
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import Response
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import LETTER
@@ -22,12 +22,17 @@ from app.schemas.patient import (
     PatientResponse,
     PatientUpdate,
 )
+from app.services.audit_log import log_event
 
 router = APIRouter(prefix="/patients", tags=["patients"])
 
 
-def _get_patient(db: Session, patient_id: int) -> Patient:
-    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+def _get_patient(db: Session, patient_id: int, owner_user_id: int) -> Patient:
+    patient = (
+        db.query(Patient)
+        .filter(Patient.id == patient_id, Patient.owner_user_id == owner_user_id)
+        .first()
+    )
     if not patient:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Patient not found"
@@ -44,21 +49,34 @@ def _build_full_name(
     return " ".join(name_parts) if name_parts else None
 
 
+def _build_update_metadata(patient: Patient, updates: dict) -> dict:
+    changes = {}
+    for field, new_value in updates.items():
+        old_value = getattr(patient, field, None)
+        if old_value != new_value:
+            changes[field] = {"old": old_value, "new": new_value}
+    return {"changed_fields": list(changes.keys()), "changes": changes}
+
+
 @router.get("/", response_model=list[PatientResponse])
 def list_patients(
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_admin),
+    current_user: User = Depends(get_current_admin),
 ):
-    return db.query(Patient).all()
+    return (
+        db.query(Patient)
+        .filter(Patient.owner_user_id == current_user.id)
+        .all()
+    )
 
 
 @router.get("/{patient_id}", response_model=PatientResponse)
 def get_patient(
     patient_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_admin),
+    current_user: User = Depends(get_current_admin),
 ):
-    patient = _get_patient(db, patient_id)
+    patient = _get_patient(db, patient_id, current_user.id)
     return patient
 
 
@@ -66,12 +84,15 @@ def get_patient(
 def list_patient_appointments(
     patient_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_admin),
+    current_user: User = Depends(get_current_admin),
 ):
-    patient = _get_patient(db, patient_id)
+    patient = _get_patient(db, patient_id, current_user.id)
     return (
         db.query(Appointment)
-        .filter(Appointment.patient_id == patient.id)
+        .filter(
+            Appointment.patient_id == patient.id,
+            Appointment.owner_user_id == current_user.id,
+        )
         .order_by(Appointment.appointment_datetime.desc())
         .all()
     )
@@ -102,12 +123,16 @@ def _format_time_range(start_time, end_time):
 def export_patient_record(
     patient_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_admin),
+    current_user: User = Depends(get_current_admin),
+    request: Request = None,
 ):
-    patient = _get_patient(db, patient_id)
+    patient = _get_patient(db, patient_id, current_user.id)
     appointments = (
         db.query(Appointment)
-        .filter(Appointment.patient_id == patient.id)
+        .filter(
+            Appointment.patient_id == patient.id,
+            Appointment.owner_user_id == current_user.id,
+        )
         .order_by(Appointment.appointment_datetime.asc())
         .all()
     )
@@ -217,6 +242,16 @@ def export_patient_record(
 
     pdf_bytes = buffer.getvalue()
     buffer.close()
+    log_event(
+        db,
+        current_user,
+        action="patient.export_pdf",
+        entity_type="patient",
+        entity_id=patient.id,
+        summary="Exported patient record PDF",
+        metadata={"full_name": patient.full_name},
+        request=request,
+    )
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
@@ -230,7 +265,8 @@ def export_patient_record(
 def create_patient(
     payload: PatientCreate,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_admin),
+    current_user: User = Depends(get_current_admin),
+    request: Request = None,
 ):
     payload_data = payload.dict(exclude_unset=True)
     full_name = _build_full_name(
@@ -244,10 +280,21 @@ def create_patient(
             detail="Patient first and last name are required.",
         )
     payload_data["full_name"] = full_name
+    payload_data["owner_user_id"] = current_user.id
     patient = Patient(**payload_data)
     db.add(patient)
     db.commit()
     db.refresh(patient)
+    log_event(
+        db,
+        current_user,
+        action="patient.create",
+        entity_type="patient",
+        entity_id=patient.id,
+        summary=f"Created patient {patient.full_name}",
+        metadata={"full_name": patient.full_name, "email": patient.email},
+        request=request,
+    )
     return patient
 
 
@@ -256,10 +303,12 @@ def update_patient(
     patient_id: int,
     payload: PatientUpdate,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_admin),
+    current_user: User = Depends(get_current_admin),
+    request: Request = None,
 ):
-    patient = _get_patient(db, patient_id)
+    patient = _get_patient(db, patient_id, current_user.id)
     payload_data = payload.dict(exclude_unset=True)
+    metadata = _build_update_metadata(patient, payload_data)
     if {"full_name", "first_name", "last_name"} & payload_data.keys():
         full_name = _build_full_name(
             payload_data.get("full_name"),
@@ -273,6 +322,16 @@ def update_patient(
     db.add(patient)
     db.commit()
     db.refresh(patient)
+    log_event(
+        db,
+        current_user,
+        action="patient.update",
+        entity_type="patient",
+        entity_id=patient.id,
+        summary=f"Updated patient {patient.full_name}",
+        metadata=metadata,
+        request=request,
+    )
     return patient
 
 
@@ -281,15 +340,27 @@ def update_patient_notes(
     patient_id: int,
     payload: PatientNotesUpdate,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_admin),
+    current_user: User = Depends(get_current_admin),
+    request: Request = None,
 ):
-    patient = _get_patient(db, patient_id)
+    patient = _get_patient(db, patient_id, current_user.id)
     update_data = payload.dict(exclude_unset=True)
+    metadata = _build_update_metadata(patient, update_data)
     if "notes" in update_data:
         patient.notes = update_data["notes"]
     db.add(patient)
     db.commit()
     db.refresh(patient)
+    log_event(
+        db,
+        current_user,
+        action="patient.update",
+        entity_type="patient",
+        entity_id=patient.id,
+        summary=f"Updated patient {patient.full_name}",
+        metadata=metadata,
+        request=request,
+    )
     return patient
 
 
@@ -297,8 +368,19 @@ def update_patient_notes(
 def delete_patient(
     patient_id: int,
     db: Session = Depends(get_db),
-    _: User = Depends(get_current_admin),
+    current_user: User = Depends(get_current_admin),
+    request: Request = None,
 ):
-    patient = _get_patient(db, patient_id)
+    patient = _get_patient(db, patient_id, current_user.id)
     db.delete(patient)
     db.commit()
+    log_event(
+        db,
+        current_user,
+        action="patient.delete",
+        entity_type="patient",
+        entity_id=patient.id,
+        summary=f"Deleted patient {patient.full_name}",
+        metadata={"full_name": patient.full_name, "email": patient.email},
+        request=request,
+    )

@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 
+from app.core.config import settings
+from app.core.limiter import limiter
 from app.core.security import get_password_hash
 from app.models.signup_otp import SignupOtp
 from app.models.user import User, UserRole
@@ -30,6 +32,50 @@ def test_login_failure(client):
         json={"email": "admin@test.com", "password": "wrong"},
     )
     assert response.status_code == 401
+
+
+def test_login_lockout(client, db_session):
+    for _ in range(settings.MAX_LOGIN_ATTEMPTS):
+        response = client.post(
+            "/api/v1/auth/login",
+            json={"email": "admin@test.com", "password": "wrong"},
+        )
+        assert response.status_code == 401
+
+    user = db_session.query(User).filter(User.email == "admin@test.com").first()
+    assert user.locked_until is not None
+
+    reset = getattr(limiter, "reset", None)
+    if callable(reset):
+        reset()
+    else:
+        storage_reset = getattr(limiter.storage, "reset", None)
+        if callable(storage_reset):
+            storage_reset()
+
+    blocked = client.post(
+        "/api/v1/auth/login",
+        json={"email": "admin@test.com", "password": "adminpass"},
+    )
+    assert blocked.status_code == 423
+
+
+def test_login_resets_attempts_on_success(client, db_session):
+    for _ in range(2):
+        client.post(
+            "/api/v1/auth/login",
+            json={"email": "admin@test.com", "password": "wrong"},
+        )
+
+    success = client.post(
+        "/api/v1/auth/login",
+        json={"email": "admin@test.com", "password": "adminpass"},
+    )
+    assert success.status_code == 200
+
+    user = db_session.query(User).filter(User.email == "admin@test.com").first()
+    assert user.failed_login_attempts == 0
+    assert user.locked_until is None
 
 
 def test_admin_can_register_user(client):
@@ -181,6 +227,43 @@ def test_signup_request_otp_cooldown_blocks_rapid_resend(client, monkeypatch):
         "/api/v1/auth/signup/request-otp", json={"email": "cooldown@example.com"}
     )
     assert second.status_code == 429
+
+
+def test_rate_limit_login(client):
+    for _ in range(5):
+        response = client.post(
+            "/api/v1/auth/login",
+            json={"email": "ratelimit@example.com", "password": "wrong"},
+        )
+        assert response.status_code == 401
+
+    limited = client.post(
+        "/api/v1/auth/login",
+        json={"email": "ratelimit@example.com", "password": "wrong"},
+    )
+    assert limited.status_code == 429
+
+
+def test_rate_limit_otp_request(client):
+    responses = []
+    for idx in range(11):
+        response = client.post(
+            "/api/v1/auth/signup/request-otp",
+            json={"email": f"otp{idx}@example.com"},
+        )
+        responses.append(response.status_code)
+    assert responses[-1] == 429
+
+
+def test_rate_limit_otp_verify(client):
+    responses = []
+    for idx in range(16):
+        response = client.post(
+            "/api/v1/auth/signup/verify-otp",
+            json=_signup_payload(f"verify{idx}@example.com", "123456"),
+        )
+        responses.append(response.status_code)
+    assert responses[-1] == 429
 
 
 def test_change_password_success(client):

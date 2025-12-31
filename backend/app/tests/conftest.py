@@ -4,6 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.core.security import get_password_hash
+from app.core.limiter import limiter
 from app.db.base import Base
 from app.db.session import get_db
 from app.main import app
@@ -24,6 +25,18 @@ def setup_db():
     Base.metadata.create_all(bind=engine)
     yield
     Base.metadata.drop_all(bind=engine)
+
+
+@pytest.fixture(autouse=True)
+def reset_rate_limiter():
+    yield
+    reset = getattr(limiter, "reset", None)
+    if callable(reset):
+        reset()
+        return
+    storage_reset = getattr(limiter.storage, "reset", None)
+    if callable(storage_reset):
+        storage_reset()
 
 
 @pytest.fixture

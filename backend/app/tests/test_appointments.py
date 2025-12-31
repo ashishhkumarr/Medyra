@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 
 from app.api.v1 import appointments as appointments_api
 from app.models.patient import Patient
+from app.models.user import User
 
 from .test_auth import get_admin_headers
 
@@ -9,10 +10,12 @@ BASE_TIME = datetime(2030, 1, 1, 9, 0, 0)
 
 
 def _create_patient(db_session) -> Patient:
+    admin = db_session.query(User).first()
     patient = Patient(
         full_name="Appointment Patient",
         email="appt@test.com",
         phone="555-0101",
+        owner_user_id=admin.id,
     )
     db_session.add(patient)
     db_session.commit()

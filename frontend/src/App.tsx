@@ -1,11 +1,14 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
+import { DemoBanner } from "./components/DemoBanner";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Navbar } from "./components/Navbar";
 import { useAuth } from "./hooks/useAuth";
 import AdminDashboard from "./pages/AdminDashboard";
+import AuditLogPage from "./pages/AuditLogPage";
 import AppointmentListPage from "./pages/AppointmentListPage";
 import CreateAppointmentPage from "./pages/CreateAppointmentPage";
+import DemoNoticePage from "./pages/DemoNoticePage";
 import EditProfilePage from "./pages/EditProfilePage";
 import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
@@ -17,24 +20,40 @@ import ChangePasswordPage from "./pages/ChangePasswordPage";
 
 const App = () => {
   const { user, hydrated } = useAuth();
+  const location = useLocation();
   const landingElement = () => {
     if (!hydrated) return null;
     if (user) return <Navigate to="/admin" replace />;
     return <LandingPage />;
   };
+  const showDemoBanner =
+    Boolean(user) ||
+    ["/login", "/signup", "/demo-notice"].some((path) =>
+      location.pathname.startsWith(path)
+    );
   return (
     <div className="min-h-screen">
+      {showDemoBanner && <DemoBanner />}
       <Navbar />
       <main className="w-full max-w-none px-6 py-8 sm:px-8 lg:px-12 2xl:px-16">
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/" element={landingElement()} />
+          <Route path="/demo-notice" element={<DemoNoticePage />} />
           <Route
             path="/admin"
             element={
               <ProtectedRoute roles={["admin"]}>
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/audit-logs"
+            element={
+              <ProtectedRoute roles={["admin"]}>
+                <AuditLogPage />
               </ProtectedRoute>
             }
           />

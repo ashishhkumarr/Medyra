@@ -1,16 +1,18 @@
 import secrets
 from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.core.limiter import get_ip_email_key, limiter
 from app.core.security import create_access_token, get_current_admin, get_password_hash, verify_password
 from app.models.signup_otp import SignupOtp
 from app.models.user import User, UserRole
 from app.schemas.auth import SignupOtpRequest, SignupOtpVerify
 from app.schemas.user import UserCreate, UserLogin, UserResponse, UserSignup
 from app.db.session import get_db
+from app.services.audit_log import log_event
 from app.services.email import build_signup_otp_email, send_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -30,10 +32,59 @@ def _generate_otp() -> str:
     return f"{secrets.randbelow(10**OTP_LENGTH):0{OTP_LENGTH}d}"
 
 
+def _get_primary_user(db: Session) -> User | None:
+    return db.query(User).order_by(User.created_at.asc(), User.id.asc()).first()
+
+
 @router.post("/login")
-def login(payload: UserLogin, db: Session = Depends(get_db)):
+@limiter.limit("5/minute", key_func=get_ip_email_key)
+@limiter.limit("20/minute")
+def login(payload: UserLogin, db: Session = Depends(get_db), request: Request = None):
+    now = datetime.utcnow()
     user = db.query(User).filter(User.email == payload.email).first()
+    if user and user.locked_until:
+        if user.locked_until > now:
+            log_event(
+                db,
+                user,
+                action="auth.locked_login_block",
+                entity_type="user",
+                entity_id=user.id,
+                summary="Login blocked due to lockout",
+                metadata={"locked_until": user.locked_until},
+                request=request,
+            )
+            raise HTTPException(
+                status_code=status.HTTP_423_LOCKED,
+                detail="Account temporarily locked. Try again later.",
+            )
+        user.locked_until = None
+        user.failed_login_attempts = 0
+        db.add(user)
+        db.commit()
     if not user or not verify_password(payload.password, user.hashed_password):
+        if user:
+            user.failed_login_attempts = (user.failed_login_attempts or 0) + 1
+            if user.failed_login_attempts >= settings.MAX_LOGIN_ATTEMPTS:
+                user.failed_login_attempts = 0
+                user.locked_until = now + timedelta(
+                    minutes=settings.LOGIN_LOCK_MINUTES
+                )
+                db.add(user)
+                db.commit()
+                log_event(
+                    db,
+                    user,
+                    action="auth.locked",
+                    entity_type="user",
+                    entity_id=user.id,
+                    summary="Account locked after failed logins",
+                    metadata={"locked_until": user.locked_until},
+                    request=request,
+                )
+            else:
+                db.add(user)
+                db.commit()
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -43,9 +94,24 @@ def login(payload: UserLogin, db: Session = Depends(get_db)):
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only clinic staff can access MediTrack",
         )
+    if user.failed_login_attempts or user.locked_until:
+        user.failed_login_attempts = 0
+        user.locked_until = None
+        db.add(user)
+        db.commit()
     token = create_access_token(
         {"sub": str(user.id), "role": user.role.value},
         expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
+    )
+    log_event(
+        db,
+        user,
+        action="auth.login",
+        entity_type="user",
+        entity_id=user.id,
+        summary="User logged in",
+        metadata={"email": user.email},
+        request=request,
     )
     return {"access_token": token, "token_type": "bearer", "user": UserResponse.from_orm(user)}
 
@@ -59,7 +125,13 @@ def signup(_: UserSignup, __: Session = Depends(get_db)):
 
 
 @router.post("/signup/request-otp", response_model=dict)
-def request_signup_otp(payload: SignupOtpRequest, db: Session = Depends(get_db)):
+@limiter.limit("3/minute", key_func=get_ip_email_key)
+@limiter.limit("10/minute")
+def request_signup_otp(
+    payload: SignupOtpRequest,
+    db: Session = Depends(get_db),
+    request: Request = None,
+):
     email = _normalize_email(payload.email)
     existing = db.query(User).filter(User.email == email).first()
     if existing:
@@ -104,12 +176,28 @@ def request_signup_otp(payload: SignupOtpRequest, db: Session = Depends(get_db))
     )
     print(f"EMAIL_TRIGGER event=signup_otp email={email}")
     send_email(email, subject, html_body, text_body)
+    log_user = _get_primary_user(db)
+    log_event(
+        db,
+        log_user,
+        action="auth.otp_requested",
+        entity_type="user",
+        summary="Signup OTP requested",
+        metadata={"email": email},
+        request=request,
+    )
 
     return {"message": "OTP sent"}
 
 
 @router.post("/signup/verify-otp", response_model=dict, status_code=status.HTTP_201_CREATED)
-def verify_signup_otp(payload: SignupOtpVerify, db: Session = Depends(get_db)):
+@limiter.limit("5/minute", key_func=get_ip_email_key)
+@limiter.limit("15/minute")
+def verify_signup_otp(
+    payload: SignupOtpVerify,
+    db: Session = Depends(get_db),
+    request: Request = None,
+):
     email = _normalize_email(payload.email)
     existing = db.query(User).filter(User.email == email).first()
     if existing:
@@ -185,6 +273,16 @@ def verify_signup_otp(payload: SignupOtpVerify, db: Session = Depends(get_db)):
     token = create_access_token(
         {"sub": str(user.id), "role": user.role.value},
         expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
+    )
+    log_event(
+        db,
+        user,
+        action="auth.signup_verified",
+        entity_type="user",
+        entity_id=user.id,
+        summary="Signup verified",
+        metadata={"email": email},
+        request=request,
     )
     return {
         "access_token": token,
