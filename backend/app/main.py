@@ -10,7 +10,16 @@ from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from sqlalchemy import DateTime, Integer, String, Text, inspect, text
 
-from app.api.v1 import admin, appointments, audit_logs, auth, patients, reminders, users
+from app.api.v1 import (
+    admin,
+    appointments,
+    audit_logs,
+    auth,
+    dashboard,
+    patients,
+    reminders,
+    users,
+)
 from app.core.config import settings
 from app.core.limiter import limiter
 from app.core.security import get_password_hash
@@ -155,6 +164,7 @@ app.include_router(appointments.router, prefix=settings.API_V1_STR)
 app.include_router(reminders.router, prefix=settings.API_V1_STR)
 app.include_router(admin.router, prefix=settings.API_V1_STR)
 app.include_router(audit_logs.router, prefix=settings.API_V1_STR)
+app.include_router(dashboard.router, prefix=settings.API_V1_STR)
 
 
 @app.get("/")

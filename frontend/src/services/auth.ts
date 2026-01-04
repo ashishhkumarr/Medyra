@@ -54,6 +54,13 @@ export const signupRequest = async (payload: SignupPayload): Promise<LoginRespon
   return data;
 };
 
+export const signupBypass = async (
+  payload: SignupPayload
+): Promise<LoginResponse> => {
+  const { data } = await apiClient.post<LoginResponse>("/auth/signup-bypass", payload);
+  return data;
+};
+
 export const requestSignupOtp = async (email: string) => {
   const { data } = await apiClient.post("/auth/signup/request-otp", { email });
   return data;

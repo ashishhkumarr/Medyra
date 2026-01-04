@@ -3,7 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { Button } from "../components/ui/Button";
 import { InputField } from "../components/ui/FormField";
-import { requestSignupOtp, verifySignupOtp } from "../services/auth";
+import { requestSignupOtp, signupBypass, verifySignupOtp } from "../services/auth";
+import { useAuthContext } from "../context/AuthContext";
 
 type FormState = {
   first_name: string;
@@ -51,6 +52,7 @@ const initialState: FormState = {
 
 const SignupPage = () => {
   const navigate = useNavigate();
+  const { login } = useAuthContext();
   const [formState, setFormState] = useState<FormState>(initialState);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [sendingOtp, setSendingOtp] = useState(false);
@@ -60,6 +62,8 @@ const SignupPage = () => {
   const [step, setStep] = useState<"details" | "otp">("details");
   const [otpMessage, setOtpMessage] = useState<string | null>(null);
   const [resendCooldown, setResendCooldown] = useState(0);
+  // TEMPORARY / REMOVE BEFORE RELEASE.
+  const bypassEnabled = import.meta.env.VITE_ENABLE_DEV_AUTH_BYPASS === "true";
 
   const requiredFields = [
     "first_name",
@@ -194,6 +198,21 @@ const SignupPage = () => {
       setApiError(getApiErrorMessage(error));
     } finally {
       setVerifyingOtp(false);
+    }
+  };
+
+  const handleBypassSignup = async () => {
+    setApiError(null);
+    if (!validate()) return;
+    setSendingOtp(true);
+    try {
+      await signupBypass(buildSignupPayload());
+      await login(formState.email, formState.password);
+      navigate("/admin");
+    } catch (error: any) {
+      setApiError(getApiErrorMessage(error));
+    } finally {
+      setSendingOtp(false);
     }
   };
 
@@ -454,9 +473,25 @@ const SignupPage = () => {
           )}
 
           {step === "details" ? (
-            <Button type="submit" className="w-full py-3 text-base" isLoading={sendingOtp}>
-              {sendingOtp ? "Sending code..." : "Send OTP"}
-            </Button>
+            <div className="space-y-3">
+              <Button type="submit" className="w-full py-3 text-base" isLoading={sendingOtp}>
+                {sendingOtp ? "Sending code..." : "Send OTP"}
+              </Button>
+              {bypassEnabled && (
+                <div className="space-y-2 text-center text-xs text-text-muted">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="w-full py-3 text-base"
+                    onClick={handleBypassSignup}
+                    disabled={sendingOtp}
+                  >
+                    Sign up without OTP (dev)
+                  </Button>
+                  <p>Dev/demo only. Remove before release.</p>
+                </div>
+              )}
+            </div>
           ) : (
             <Button
               type="submit"

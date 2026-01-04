@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str | None = None
     EMAIL_FROM: str = "onboarding@resend.dev"
     EMAIL_ENABLED: bool = False
+    ENABLE_DEV_AUTH_BYPASS: bool = False
     DEMO_MODE: bool = True
     MAX_LOGIN_ATTEMPTS: int = 5
     LOGIN_LOCK_MINUTES: int = 15
