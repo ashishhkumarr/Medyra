@@ -9,7 +9,7 @@ from app.core.security import (
 )
 from app.db.session import get_db
 from app.models.user import User
-from app.schemas.user import PasswordChange, UserResponse, UserUpdate
+from app.schemas.user import PasswordChange, UserProfileUpdate, UserResponse, UserUpdate
 from app.services.audit_log import log_event
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -24,54 +24,89 @@ def read_current_user(
 
 @router.put("/me", response_model=UserResponse)
 def update_me(
-    payload: UserUpdate,
+    payload: UserProfileUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
+    request: Request = None,
 ):
-    if payload.full_name:
-        current_user.full_name = payload.full_name
-    if payload.first_name is not None:
-        current_user.first_name = payload.first_name
-    if payload.last_name is not None:
-        current_user.last_name = payload.last_name
-    if payload.phone is not None:
-        current_user.phone = payload.phone
-    if payload.specialty is not None:
-        current_user.specialty = payload.specialty
-    if payload.license_number is not None:
-        current_user.license_number = payload.license_number
-    if payload.license_state is not None:
-        current_user.license_state = payload.license_state
-    if payload.license_country is not None:
-        current_user.license_country = payload.license_country
-    if payload.npi_number is not None:
-        current_user.npi_number = payload.npi_number
-    if payload.taxonomy_code is not None:
-        current_user.taxonomy_code = payload.taxonomy_code
-    if payload.clinic_name is not None:
-        current_user.clinic_name = payload.clinic_name
-    if payload.clinic_address is not None:
-        current_user.clinic_address = payload.clinic_address
-    if payload.clinic_city is not None:
-        current_user.clinic_city = payload.clinic_city
-    if payload.clinic_state is not None:
-        current_user.clinic_state = payload.clinic_state
-    if payload.clinic_zip is not None:
-        current_user.clinic_zip = payload.clinic_zip
-    if payload.clinic_country is not None:
-        current_user.clinic_country = payload.clinic_country
-    if payload.first_name is not None or payload.last_name is not None:
+    changed_fields = _apply_profile_update(payload, current_user)
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
+    if changed_fields:
+        log_event(
+            db,
+            current_user,
+            action="profile.updated",
+            entity_type="user",
+            entity_id=current_user.id,
+            summary="Profile updated",
+            metadata={"changed_fields": changed_fields},
+            request=request,
+        )
+    return current_user
+
+
+@router.patch("/me", response_model=UserResponse)
+def patch_me(
+    payload: UserProfileUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+    request: Request = None,
+):
+    changed_fields = _apply_profile_update(payload, current_user)
+    db.add(current_user)
+    db.commit()
+    db.refresh(current_user)
+    if changed_fields:
+        log_event(
+            db,
+            current_user,
+            action="profile.updated",
+            entity_type="user",
+            entity_id=current_user.id,
+            summary="Profile updated",
+            metadata={"changed_fields": changed_fields},
+            request=request,
+        )
+    return current_user
+
+
+def _apply_profile_update(payload: UserProfileUpdate, current_user: User) -> list[str]:
+    changed_fields: list[str] = []
+
+    def set_if(field: str, value: str | None) -> None:
+        if value is None:
+            return
+        current_value = getattr(current_user, field)
+        if value != current_value:
+            setattr(current_user, field, value)
+            changed_fields.append(field)
+
+    set_if("first_name", payload.first_name)
+    set_if("last_name", payload.last_name)
+    set_if("phone", payload.phone)
+    set_if("specialty", payload.specialty)
+    set_if("license_number", payload.license_number)
+    set_if("license_state", payload.license_state)
+    set_if("license_country", payload.license_country)
+    set_if("npi_number", payload.npi_number)
+    set_if("taxonomy_code", payload.taxonomy_code)
+    set_if("clinic_name", payload.clinic_name)
+    set_if("clinic_address", payload.clinic_address)
+    set_if("clinic_city", payload.clinic_city)
+    set_if("clinic_state", payload.clinic_state)
+    set_if("clinic_zip", payload.clinic_zip)
+    set_if("clinic_country", payload.clinic_country)
+
+    if "first_name" in changed_fields or "last_name" in changed_fields:
         full_name_parts = [
             part for part in [current_user.first_name, current_user.last_name] if part
         ]
         if full_name_parts:
             current_user.full_name = " ".join(full_name_parts)
-    if payload.password:
-        current_user.hashed_password = get_password_hash(payload.password)
-    db.add(current_user)
-    db.commit()
-    db.refresh(current_user)
-    return current_user
+
+    return changed_fields
 
 
 def _apply_password_change(
