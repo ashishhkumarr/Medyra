@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import {
   ArrowRight,
   CalendarClock,
@@ -80,9 +81,27 @@ const highlights = [
 
 const LandingPage = () => {
   const { user } = useAuth();
+  const location = useLocation();
   const primaryAction = user
     ? { label: "Open dashboard", to: "/admin" }
     : { label: "Sign in to MediTrack", to: "/login" };
+
+  useEffect(() => {
+    if (!location.hash) return;
+    const id = location.hash.replace("#", "");
+    if (!id) return;
+    const prefersReducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const scrollToSection = () => {
+      const element = document.getElementById(id);
+      if (!element) return;
+      element.scrollIntoView({
+        behavior: prefersReducedMotion ? "auto" : "smooth",
+        block: "start"
+      });
+    };
+    const timer = window.setTimeout(scrollToSection, 0);
+    return () => window.clearTimeout(timer);
+  }, [location.hash, location.pathname]);
 
   return (
     <div className="space-y-24 pb-20">
@@ -224,7 +243,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      <section id="features" className="space-y-10">
+      <section id="features" className="space-y-10 scroll-mt-28 md:scroll-mt-32">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-2">
             <p className="text-sm font-semibold uppercase tracking-wide text-primary">Core capabilities</p>
@@ -258,7 +277,10 @@ const LandingPage = () => {
         </div>
       </section>
 
-      <section id="workflow" className="grid gap-10 lg:grid-cols-[1fr,1.05fr]">
+      <section
+        id="workflow"
+        className="grid gap-10 scroll-mt-28 md:scroll-mt-32 lg:grid-cols-[1fr,1.05fr]"
+      >
         <div className="space-y-4">
           <p className="text-sm font-semibold uppercase tracking-wide text-primary">Daily workflow</p>
           <h2 className="text-3xl font-semibold text-text sm:text-4xl">
@@ -296,7 +318,10 @@ const LandingPage = () => {
         </div>
       </section>
 
-      <section id="communication" className="grid gap-6 lg:grid-cols-[1.1fr,0.9fr]">
+      <section
+        id="communication"
+        className="grid gap-6 scroll-mt-28 md:scroll-mt-32 lg:grid-cols-[1.1fr,0.9fr]"
+      >
         <Card className="space-y-4">
           <p className="text-sm font-semibold uppercase tracking-wide text-primary">
             Patient communication

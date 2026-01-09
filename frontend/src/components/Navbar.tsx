@@ -60,6 +60,7 @@ export const Navbar = () => {
     { href: "#workflow", label: "Workflow" },
     { href: "#communication", label: "Reminders" }
   ];
+  const isLandingPage = location.pathname === "/";
 
   useEffect(() => {
     const storedTheme = localStorage.getItem("theme");
@@ -139,11 +140,14 @@ export const Navbar = () => {
         ) : (
           <div className="flex items-center gap-4">
             <nav className="hidden items-center gap-4 text-sm font-semibold text-text-muted lg:flex">
-              {publicLinks.map((link) => (
-                <a key={link.href} href={link.href} className="transition hover:text-text">
-                  {link.label}
-                </a>
-              ))}
+              {publicLinks.map((link) => {
+                const href = isLandingPage ? link.href : `/${link.href}`;
+                return (
+                  <a key={link.href} href={href} className="transition hover:text-text">
+                    {link.label}
+                  </a>
+                );
+              })}
             </nav>
             <button
               type="button"
