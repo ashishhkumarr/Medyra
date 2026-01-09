@@ -10,6 +10,7 @@ import { InputField, TextAreaField } from "../components/ui/FormField";
 import { SectionHeader } from "../components/ui/SectionHeader";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { useCreatePatient, usePatients } from "../hooks/usePatients";
+import { toast } from "../lib/toast";
 import { PatientCreatePayload } from "../services/patients";
 
 type PatientFormState = {
@@ -47,13 +48,6 @@ const PatientListPage = () => {
     Partial<Record<keyof PatientFormState, string>>
   >({});
   const [apiError, setApiError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!successMessage) return;
-    const timer = window.setTimeout(() => setSuccessMessage(null), 4000);
-    return () => window.clearTimeout(timer);
-  }, [successMessage]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -179,10 +173,11 @@ const PatientListPage = () => {
 
     try {
       await createPatient.mutateAsync(payload);
-      setSuccessMessage("Patient created successfully");
+      toast.success("Patient created");
       handleCloseModal();
     } catch (submitError: any) {
       setApiError(getApiErrorMessage(submitError));
+      toast.error("Unable to create patient");
     }
   };
 
@@ -197,11 +192,6 @@ const PatientListPage = () => {
           </Button>
         }
       />
-      {successMessage && (
-        <div className="rounded-2xl border border-success/30 bg-success-soft/80 px-4 py-3 text-sm text-success shadow-sm animate-toastIn">
-          {successMessage}
-        </div>
-      )}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="w-full max-w-md">
           <InputField

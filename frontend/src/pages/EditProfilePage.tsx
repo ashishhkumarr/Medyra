@@ -11,6 +11,7 @@ import { InputField } from "../components/ui/FormField";
 import { SectionHeader } from "../components/ui/SectionHeader";
 import { useAuth } from "../hooks/useAuth";
 import { usePageTitle } from "../hooks/usePageTitle";
+import { toast } from "../lib/toast";
 import { fetchCurrentUser, updateCurrentUser } from "../services/users";
 
 type ProfileFormState = {
@@ -140,6 +141,7 @@ const EditProfilePage = () => {
     if (!hasChanges || hasErrors) return;
     try {
       await mutation.mutateAsync(changedFields);
+      toast.success("Profile updated");
     } catch (submitError: any) {
       const detail = submitError?.response?.data?.detail;
       setSubmitError(
@@ -147,6 +149,7 @@ const EditProfilePage = () => {
           ? detail
           : "Unable to update profile. Please try again."
       );
+      toast.error("Unable to update profile");
     }
   };
 
@@ -309,9 +312,6 @@ const EditProfilePage = () => {
             Change Password
           </Button>
         </div>
-        {mutation.isSuccess && (
-          <p className="text-sm text-success">Profile updated successfully.</p>
-        )}
       </form>
     </Card>
   );

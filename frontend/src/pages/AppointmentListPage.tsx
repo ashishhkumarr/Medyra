@@ -18,6 +18,7 @@ import {
 import { usePatients } from "../hooks/usePatients";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { Appointment, AppointmentStatus } from "../services/appointments";
+import { toast } from "../lib/toast";
 
 type AppointmentFormState = {
   appointment_datetime: string;
@@ -456,9 +457,11 @@ const AppointmentListPage = () => {
         appointmentId: appointment.id,
         payload: { status: "Confirmed" }
       });
-      setSuccessMessage("Appointment confirmed.");
+      toast.success("Appointment confirmed");
     } catch (confirmError: any) {
-      setActionError(getApiErrorMessage(confirmError));
+      const message = getApiErrorMessage(confirmError);
+      toast.error(message || "Unable to confirm appointment");
+      setActionError(message);
     }
   };
 

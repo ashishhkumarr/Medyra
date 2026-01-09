@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { Toaster } from "sonner";
 
 import { DemoBanner } from "./components/DemoBanner";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -36,6 +37,15 @@ const App = () => {
     <PageShell>
       {showDemoBanner && <DemoBanner />}
       <Navbar />
+      <Toaster
+        position="top-right"
+        closeButton
+        toastOptions={{
+          className:
+            "rounded-2xl border border-border/60 bg-surface/90 text-text shadow-card backdrop-blur",
+          descriptionClassName: "text-xs text-text-muted"
+        }}
+      />
       <main className="mx-auto w-full max-w-[1400px] px-4 py-10 sm:px-6 lg:px-10">
         <Routes>
           <Route path="/login" element={<LoginPage />} />
