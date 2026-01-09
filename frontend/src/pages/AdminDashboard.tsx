@@ -17,7 +17,8 @@ const AdminDashboard = () => {
     data: analytics,
     isLoading,
     isError,
-    refetch
+    refetch,
+    isFetching
   } = useDashboardAnalytics();
   const [showResetModal, setShowResetModal] = useState(false);
   const [reseedAfterReset, setReseedAfterReset] = useState(true);
@@ -70,8 +71,20 @@ const AdminDashboard = () => {
           description="Demo analytics overview"
           action={
             <div className="flex items-center gap-2">
-              <Button variant="secondary" size="sm" onClick={() => refetch()}>
-                Retry
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => refetch()}
+                disabled={isFetching}
+              >
+                {isFetching ? (
+                  <>
+                    <RefreshCcw className="mr-2 h-4 w-4 animate-spin" />
+                    Refreshing…
+                  </>
+                ) : (
+                  "Retry"
+                )}
               </Button>
               {resetEnabled && (
                 <Button
@@ -101,6 +114,49 @@ const AdminDashboard = () => {
   }
 
   const { kpis, trends, breakdowns } = analytics;
+  const buildTrend = (
+    current?: number,
+    previous?: number,
+    label?: string
+  ): { text: string; tone: "positive" | "negative" | "neutral" | "muted" } => {
+    if (current === undefined || previous === undefined) {
+      return { text: "— No prior data", tone: "muted" };
+    }
+    const delta = current - previous;
+    if (delta > 0) {
+      return {
+        text: `↑ +${delta}${label ? ` ${label}` : ""}`,
+        tone: "positive"
+      };
+    }
+    if (delta < 0) {
+      return {
+        text: `↓ -${Math.abs(delta)}${label ? ` ${label}` : ""}`,
+        tone: "negative"
+      };
+    }
+    return { text: "No change", tone: "neutral" };
+  };
+
+  const daySeries = trends.appointmentsByDay30d ?? [];
+  const todayPoint = daySeries[daySeries.length - 1];
+  const yesterdayPoint = daySeries[daySeries.length - 2];
+  const appointmentsTrend = buildTrend(
+    todayPoint?.count,
+    yesterdayPoint?.count,
+    "vs yesterday"
+  );
+
+  const weekSeries = trends.newPatientsByWeek12w ?? [];
+  const latestWeek = weekSeries[weekSeries.length - 1];
+  const priorWeek = weekSeries[weekSeries.length - 2];
+  const newPatientsTrend = buildTrend(
+    latestWeek?.count,
+    priorWeek?.count,
+    "vs last week"
+  );
+
+  const noPriorTrend = { text: "— No prior data", tone: "muted" as const };
   const isEmpty =
     kpis.totalPatients === 0 &&
     kpis.appointmentsToday === 0 &&
@@ -114,9 +170,14 @@ const AdminDashboard = () => {
         description="Demo analytics overview"
         action={
           <div className="flex flex-wrap items-center gap-2">
-            <Button variant="secondary" size="sm" onClick={() => refetch()}>
-              <RefreshCcw className="mr-2 h-4 w-4" />
-              Refresh
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => refetch()}
+              disabled={isFetching}
+            >
+              <RefreshCcw className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
+              {isFetching ? "Refreshing…" : "Refresh"}
             </Button>
             {resetEnabled && (
               <Button variant="destructive" size="sm" onClick={() => setShowResetModal(true)}>
@@ -144,21 +205,29 @@ const AdminDashboard = () => {
           label="Total patients"
           value={kpis.totalPatients}
           icon={<Users className="h-6 w-6" />}
+          trendText={noPriorTrend.text}
+          trendTone={noPriorTrend.tone}
         />
         <KpiCard
           label="Appointments today"
           value={kpis.appointmentsToday}
           icon={<Activity className="h-6 w-6" />}
+          trendText={appointmentsTrend.text}
+          trendTone={appointmentsTrend.tone}
         />
         <KpiCard
           label="Upcoming (7 days)"
           value={kpis.upcomingAppointments7d}
           icon={<CalendarClock className="h-6 w-6" />}
+          trendText={noPriorTrend.text}
+          trendTone={noPriorTrend.tone}
         />
         <KpiCard
           label="New patients (30 days)"
           value={kpis.newPatients30d}
           icon={<UserPlus className="h-6 w-6" />}
+          trendText={newPatientsTrend.text}
+          trendTone={newPatientsTrend.tone}
         />
       </div>
 

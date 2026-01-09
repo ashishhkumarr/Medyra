@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { BarChartD3, type BarDatum } from "../charts/BarChartD3";
+import { LineChartD3 } from "../charts/LineChartD3";
 import { Card } from "../ui/Card";
 
 type DayPoint = { date: string; count: number };
@@ -30,147 +32,85 @@ const ChartCard = ({
   </Card>
 );
 
-const LineChart = ({ data }: { data: DayPoint[] }) => {
-  const values = data.map((point) => point.count);
-  const maxValue = Math.max(...values, 1);
-  const width = 520;
-  const height = 180;
-  const stepX = data.length > 1 ? width / (data.length - 1) : width;
-  const points = data.map((point, index) => {
-    const x = index * stepX;
-    const y = height - (point.count / maxValue) * height;
-    return { x, y, ...point };
+const EmptyChartState = () => (
+  <div className="flex min-h-[200px] flex-col items-center justify-center rounded-2xl border border-border/50 bg-surface/60 px-6 py-8 text-center text-sm text-text-muted">
+    <p className="text-sm font-semibold text-text">No data in this period</p>
+    <p className="mt-1 text-xs text-text-muted">
+      Activity will appear here once you start using MediTrack.
+    </p>
+  </div>
+);
+
+const statusColors: Record<string, string> = {
+  unconfirmed: "rgb(var(--color-warning))",
+  confirmed: "rgb(var(--color-primary))",
+  scheduled: "rgb(var(--color-warning))",
+  completed: "rgb(var(--color-success))",
+  cancelled: "rgb(var(--color-danger))",
+  no_show: "rgb(var(--color-warning))",
+  other: "rgb(var(--color-border))"
+};
+
+const toStatusBars = (data: StatusPoint[]): BarDatum[] =>
+  data.map((point) => {
+    const key = point.status.toLowerCase();
+    return {
+      key,
+      label: point.status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+      count: point.count,
+      color: statusColors[key] || statusColors.other
+    };
   });
-  const path = points
-    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
-    .join(" ");
-  const areaPath = `${path} L ${width} ${height} L 0 ${height} Z`;
-
-  return (
-    <div>
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        className="h-44 w-full overflow-visible"
-        role="img"
-        aria-label="Appointments over the last 30 days"
-      >
-        <defs>
-          <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="rgba(34,211,191,0.35)" />
-            <stop offset="100%" stopColor="rgba(34,211,191,0.05)" />
-          </linearGradient>
-        </defs>
-        <path d={areaPath} fill="url(#areaFill)" />
-        <path
-          d={path}
-          fill="none"
-          stroke="rgb(34,211,191)"
-          strokeWidth="3"
-        />
-        {points.map((point, index) => (
-          <circle
-            key={`${point.date}-${index}`}
-            cx={point.x}
-            cy={point.y}
-            r="3.5"
-            fill="rgb(34,211,191)"
-          >
-            <title>
-              {point.date}: {point.count}
-            </title>
-          </circle>
-        ))}
-      </svg>
-      <div className="flex justify-between text-xs text-text-muted">
-        <span>{data[0]?.date}</span>
-        <span>{data[data.length - 1]?.date}</span>
-      </div>
-    </div>
-  );
-};
-
-const BarChart = ({ data }: { data: WeekPoint[] }) => {
-  const values = data.map((point) => point.count);
-  const maxValue = Math.max(...values, 1);
-
-  return (
-    <div className="space-y-3">
-      <div className="flex h-40 items-end gap-2">
-        {data.map((point) => {
-          const height = `${Math.max((point.count / maxValue) * 100, 6)}%`;
-          return (
-            <div key={point.weekStart} className="flex flex-1 items-end">
-              <div
-                className="w-full rounded-full bg-secondary/70 shadow-sm"
-                style={{ height }}
-                title={`${point.weekStart}: ${point.count}`}
-              />
-            </div>
-          );
-        })}
-      </div>
-      <div className="flex justify-between text-xs text-text-muted">
-        <span>{data[0]?.weekStart}</span>
-        <span>{data[data.length - 1]?.weekStart}</span>
-      </div>
-    </div>
-  );
-};
-
-const StatusBars = ({ data }: { data: StatusPoint[] }) => {
-  const total = data.reduce((sum, point) => sum + point.count, 0) || 1;
-  const colors: Record<string, string> = {
-    unconfirmed: "bg-warning/80",
-    confirmed: "bg-primary/80",
-    scheduled: "bg-warning/80",
-    completed: "bg-success/80",
-    cancelled: "bg-danger/70",
-    no_show: "bg-warning/80",
-    other: "bg-border"
-  };
-
-  return (
-    <div className="space-y-4">
-      {data.map((point) => {
-        const percentage = Math.round((point.count / total) * 100);
-        return (
-          <div key={point.status} className="space-y-2">
-            <div className="flex items-center justify-between text-xs text-text-muted">
-              <span className="uppercase tracking-wide">{point.status}</span>
-              <span>
-                {point.count} ({percentage}%)
-              </span>
-            </div>
-            <div className="h-2 w-full rounded-full bg-surface/60">
-              <div
-                className={`h-2 rounded-full ${colors[point.status] || colors.other}`}
-                style={{ width: `${percentage}%` }}
-              />
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
 
 export const AnalyticsCharts = ({
   appointmentsByDay,
   newPatientsByWeek,
   appointmentsByStatus
 }: AnalyticsChartsProps) => {
+  const weeklySeries = newPatientsByWeek.map((point) => ({
+    date: point.weekStart,
+    count: point.count
+  }));
+  const appointmentsEmpty =
+    appointmentsByDay.length === 0 || appointmentsByDay.every((point) => point.count === 0);
+  const weeklyEmpty =
+    weeklySeries.length === 0 || weeklySeries.every((point) => point.count === 0);
+  const statusTotal = appointmentsByStatus.reduce((sum, point) => sum + point.count, 0);
+  const statusEmpty = appointmentsByStatus.length === 0 || statusTotal === 0;
+
   return (
     <div className="grid gap-6 lg:grid-cols-[2fr,1fr]">
       <div className="space-y-6">
         <ChartCard title="Appointments by day" subtitle="Last 30 days">
-          <LineChart data={appointmentsByDay} />
+          {appointmentsEmpty ? (
+            <EmptyChartState />
+          ) : (
+            <LineChartD3
+              data={appointmentsByDay}
+              ariaLabel="Appointments over the last 30 days"
+            />
+          )}
         </ChartCard>
         <ChartCard title="New patients by week" subtitle="Last 12 weeks">
-          <BarChart data={newPatientsByWeek} />
+          {weeklyEmpty ? (
+            <EmptyChartState />
+          ) : (
+            <LineChartD3
+              data={weeklySeries}
+              ariaLabel="New patients over the last 12 weeks"
+            />
+          )}
         </ChartCard>
       </div>
       <ChartCard title="Appointments by status" subtitle="Last 30 days">
-        <StatusBars data={appointmentsByStatus} />
+        {statusEmpty ? (
+          <EmptyChartState />
+        ) : (
+          <BarChartD3
+            data={toStatusBars(appointmentsByStatus)}
+            ariaLabel="Appointments by status"
+          />
+        )}
       </ChartCard>
     </div>
   );

@@ -37,7 +37,7 @@ export const BarChartD3 = ({ data, height = 280, ariaLabel }: BarChartD3Props) =
     const innerWidth = Math.max(width - margin.left - margin.right, 0);
     const innerHeight = Math.max(height - margin.top - margin.bottom, 0);
 
-    const maxValue = d3.max(data, (d) => d.count) ?? 0;
+    const maxValue = d3.max(data, (d: BarDatum) => d.count) ?? 0;
     const xScale = d3.scaleLinear().domain([0, Math.max(maxValue, 1)]).range([0, innerWidth]).nice();
     const yScale = d3
       .scaleBand()
@@ -56,13 +56,13 @@ export const BarChartD3 = ({ data, height = 280, ariaLabel }: BarChartD3Props) =
       .append("g")
       .call(d3.axisBottom(xScale).ticks(4).tickSizeOuter(0))
       .attr("transform", `translate(0,${innerHeight})`)
-      .call((selection) =>
+      .call((selection: d3.Selection<SVGGElement, unknown, null, undefined>) =>
         selection
           .selectAll("text")
           .attr("fill", "rgb(var(--color-text-subtle))")
           .attr("font-size", 10)
       )
-      .call((selection) =>
+      .call((selection: d3.Selection<SVGGElement, unknown, null, undefined>) =>
         selection
           .selectAll("line, path")
           .attr("stroke", "rgb(var(--color-border) / 0.5)")
@@ -75,12 +75,12 @@ export const BarChartD3 = ({ data, height = 280, ariaLabel }: BarChartD3Props) =
       .append("rect")
       .attr("class", "bar")
       .attr("x", 0)
-      .attr("y", (d) => yScale(d.key) ?? 0)
+      .attr("y", (d: BarDatum) => yScale(d.key) ?? 0)
       .attr("height", yScale.bandwidth())
-      .attr("fill", (d) => d.color)
+      .attr("fill", (d: BarDatum) => d.color)
       .attr("rx", 8)
       .attr("tabindex", 0)
-      .attr("aria-label", (d) => `${d.label}: ${d.count}`)
+      .attr("aria-label", (d: BarDatum) => `${d.label}: ${d.count}`)
       .attr("width", 0);
 
     if (!prefersReducedMotion) {
@@ -88,10 +88,15 @@ export const BarChartD3 = ({ data, height = 280, ariaLabel }: BarChartD3Props) =
         .transition()
         .duration(500)
         .ease(d3.easeCubicOut)
-        .attr("width", (d) => xScale(d.count));
+        .attr("width", (d: BarDatum) => xScale(d.count));
     } else {
-      bars.attr("width", (d) => xScale(d.count));
+      bars.attr("width", (d: BarDatum) => xScale(d.count));
     }
+
+    bars.style(
+      "transition",
+      prefersReducedMotion ? "none" : "filter 200ms ease, opacity 200ms ease"
+    );
 
     chart
       .selectAll("text.label")
@@ -100,12 +105,12 @@ export const BarChartD3 = ({ data, height = 280, ariaLabel }: BarChartD3Props) =
       .append("text")
       .attr("class", "label")
       .attr("x", -12)
-      .attr("y", (d) => (yScale(d.key) ?? 0) + yScale.bandwidth() / 2)
+      .attr("y", (d: BarDatum) => (yScale(d.key) ?? 0) + yScale.bandwidth() / 2)
       .attr("text-anchor", "end")
       .attr("dominant-baseline", "middle")
       .attr("fill", "rgb(var(--color-text))")
       .attr("font-size", 12)
-      .text((d) => d.label);
+      .text((d: BarDatum) => d.label);
 
     chart
       .selectAll("text.value")
@@ -113,12 +118,12 @@ export const BarChartD3 = ({ data, height = 280, ariaLabel }: BarChartD3Props) =
       .enter()
       .append("text")
       .attr("class", "value")
-      .attr("x", (d) => xScale(d.count) + 8)
-      .attr("y", (d) => (yScale(d.key) ?? 0) + yScale.bandwidth() / 2)
+      .attr("x", (d: BarDatum) => xScale(d.count) + 8)
+      .attr("y", (d: BarDatum) => (yScale(d.key) ?? 0) + yScale.bandwidth() / 2)
       .attr("dominant-baseline", "middle")
       .attr("fill", "rgb(var(--color-text-subtle))")
       .attr("font-size", 11)
-      .text((d) => d.count);
+      .text((d: BarDatum) => d.count);
 
     const showTooltip = (event: MouseEvent | FocusEvent, d: BarDatum) => {
       const [x, y] =
@@ -136,10 +141,29 @@ export const BarChartD3 = ({ data, height = 280, ariaLabel }: BarChartD3Props) =
 
     const hideTooltip = () => setTooltip(null);
 
-    bars.on("mousemove", (event, d) => showTooltip(event, d));
+    const highlight = (event: MouseEvent | FocusEvent, d: BarDatum) => {
+      d3.select<SVGRectElement, BarDatum>(event.currentTarget as SVGRectElement)
+        .attr("opacity", 0.92)
+        .style(
+          "filter",
+          "drop-shadow(0 10px 18px rgb(var(--color-primary) / 0.25))"
+        );
+      showTooltip(event, d);
+    };
+
+    const unhighlight = (event: MouseEvent | FocusEvent) => {
+      d3.select<SVGRectElement, BarDatum>(event.currentTarget as SVGRectElement)
+        .attr("opacity", 1)
+        .style("filter", "none");
+      hideTooltip();
+    };
+
+    bars.on("mousemove", (event: MouseEvent, d: BarDatum) => highlight(event, d));
     bars.on("mouseleave", hideTooltip);
-    bars.on("focus", (event, d) => showTooltip(event, d));
-    bars.on("blur", hideTooltip);
+    bars.on("mouseenter", (event: MouseEvent, d: BarDatum) => highlight(event, d));
+    bars.on("focus", (event: FocusEvent, d: BarDatum) => highlight(event, d));
+    bars.on("blur", (event: FocusEvent) => unhighlight(event));
+    bars.on("mouseleave", (event: MouseEvent) => unhighlight(event));
 
     return () => {
       svg.selectAll("*").remove();

@@ -45,8 +45,8 @@ export const LineChartD3 = ({
       dateValue: new Date(point.date)
     }));
 
-    const xDomain = d3.extent(parsed, (d) => d.dateValue) as [Date, Date];
-    const maxValue = d3.max(parsed, (d) => d.count) ?? 0;
+    const xDomain = d3.extent(parsed, (d: LinePointParsed) => d.dateValue) as [Date, Date];
+    const maxValue = d3.max(parsed, (d: LinePointParsed) => d.count) ?? 0;
     const yDomain: [number, number] = [0, Math.max(maxValue, 1)];
 
     const xScale = d3.scaleTime().domain(xDomain).range([0, innerWidth]);
@@ -87,16 +87,16 @@ export const LineChartD3 = ({
       .append("line")
       .attr("x1", 0)
       .attr("x2", innerWidth)
-      .attr("y1", (d) => yScale(d))
-      .attr("y2", (d) => yScale(d))
+      .attr("y1", (d: number) => yScale(d))
+      .attr("y2", (d: number) => yScale(d))
       .attr("stroke", "rgb(var(--color-border) / 0.35)")
       .attr("stroke-dasharray", "2 4");
 
     const area = d3
       .area<LinePointParsed>()
-      .x((d) => xScale(d.dateValue))
+      .x((d: LinePointParsed) => xScale(d.dateValue))
       .y0(innerHeight)
-      .y1((d) => yScale(d.count))
+      .y1((d: LinePointParsed) => yScale(d.count))
       .curve(d3.curveMonotoneX);
 
     chart
@@ -107,8 +107,8 @@ export const LineChartD3 = ({
 
     const line = d3
       .line<LinePointParsed>()
-      .x((d) => xScale(d.dateValue))
-      .y((d) => yScale(d.count))
+      .x((d: LinePointParsed) => xScale(d.dateValue))
+      .y((d: LinePointParsed) => yScale(d.count))
       .curve(d3.curveMonotoneX);
 
     const linePath = chart
@@ -135,13 +135,13 @@ export const LineChartD3 = ({
       .append("g")
       .attr("transform", `translate(0,${innerHeight})`)
       .call(xAxis)
-      .call((selection) =>
+      .call((selection: d3.Selection<SVGGElement, unknown, null, undefined>) =>
         selection
           .selectAll("text")
           .attr("fill", "rgb(var(--color-text-subtle))")
           .attr("font-size", 11)
       )
-      .call((selection) =>
+      .call((selection: d3.Selection<SVGGElement, unknown, null, undefined>) =>
         selection
           .selectAll("line, path")
           .attr("stroke", "rgb(var(--color-border) / 0.5)")
@@ -151,13 +151,13 @@ export const LineChartD3 = ({
     chart
       .append("g")
       .call(yAxis)
-      .call((selection) =>
+      .call((selection: d3.Selection<SVGGElement, unknown, null, undefined>) =>
         selection
           .selectAll("text")
           .attr("fill", "rgb(var(--color-text-subtle))")
           .attr("font-size", 11)
       )
-      .call((selection) =>
+      .call((selection: d3.Selection<SVGGElement, unknown, null, undefined>) =>
         selection
           .selectAll("line, path")
           .attr("stroke", "rgb(var(--color-border) / 0.5)")
@@ -169,7 +169,8 @@ export const LineChartD3 = ({
       .attr("stroke-dasharray", "2 4")
       .attr("y1", 0)
       .attr("y2", innerHeight)
-      .style("opacity", 0);
+      .style("opacity", 0)
+      .style("transition", prefersReducedMotion ? "none" : "opacity 200ms ease");
 
     const focusDot = chart
       .append("circle")
@@ -177,9 +178,14 @@ export const LineChartD3 = ({
       .attr("fill", "rgb(var(--color-primary))")
       .attr("stroke", "rgb(var(--color-surface) / 0.9)")
       .attr("stroke-width", 2)
-      .style("opacity", 0);
+      .style("opacity", 0)
+      .style(
+        "transition",
+        prefersReducedMotion ? "none" : "opacity 200ms ease, transform 200ms ease"
+      );
 
-    const bisectDate = d3.bisector<LinePointParsed, Date>((d) => d.dateValue).center;
+    const bisectDate = d3.bisector<LinePointParsed, Date>((d: LinePointParsed) => d.dateValue)
+      .center;
 
     const handleHover = (event: MouseEvent | FocusEvent, point?: LinePoint) => {
       if (!parsed.length) return;
@@ -199,13 +205,21 @@ export const LineChartD3 = ({
       focusLine.attr("x1", xValue).attr("x2", xValue).style("opacity", 1);
       focusDot.attr("cx", xValue).attr("cy", yValue).style("opacity", 1);
 
+      const formattedDate = new Intl.DateTimeFormat(undefined, {
+        month: "short",
+        day: "numeric"
+      }).format(current.dateValue);
       const label = tooltipFormatter
         ? tooltipFormatter(current)
-        : `${current.date}: ${current.count}`;
+        : `${formattedDate}: ${current.count}`;
+
+      const tooltipX = "clientX" in event ? margin.left + xPos : margin.left + xValue;
+      const safeX = Math.min(Math.max(tooltipX, 16), width - 16);
+      const safeY = Math.min(Math.max(margin.top + yValue, 16), height - 16);
 
       setTooltip({
-        x: margin.left + xValue,
-        y: margin.top + yValue,
+        x: safeX,
+        y: safeY,
         label,
         value: current.count
       });
@@ -223,8 +237,11 @@ export const LineChartD3 = ({
       .attr("height", innerHeight)
       .attr("fill", "transparent")
       .attr("pointer-events", "all")
-      .on("mousemove", function (event) {
-        handleHover(event as MouseEvent);
+      .on("mousemove", (event: MouseEvent) => {
+        handleHover(event);
+      })
+      .on("focus", (event: FocusEvent) => {
+        handleHover(event);
       })
       .on("mouseleave", hideTooltip);
 
@@ -234,13 +251,13 @@ export const LineChartD3 = ({
       .enter()
       .append("circle")
       .attr("class", "data-point")
-      .attr("cx", (d) => xScale(d.dateValue))
-      .attr("cy", (d) => yScale(d.count))
+      .attr("cx", (d: LinePointParsed) => xScale(d.dateValue))
+      .attr("cy", (d: LinePointParsed) => yScale(d.count))
       .attr("r", 10)
       .attr("fill", "transparent")
       .attr("tabindex", 0)
-      .attr("aria-label", (d) => `${d.date}: ${d.count}`)
-      .on("focus", (event, d) => handleHover(event, d))
+      .attr("aria-label", (d: LinePointParsed) => `${d.date}: ${d.count}`)
+      .on("focus", (event: FocusEvent, d: LinePointParsed) => handleHover(event, d))
       .on("blur", hideTooltip);
 
     return () => {
