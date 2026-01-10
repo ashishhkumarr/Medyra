@@ -22,6 +22,10 @@ class AppointmentBase(BaseModel):
     appointment_end_datetime: datetime | None = None
     notes: str | None = None
     status: AppointmentStatus = AppointmentStatus.unconfirmed
+    reminder_email_enabled: bool = False
+    reminder_sms_enabled: bool = False
+    reminder_email_minutes_before: int = 1440
+    reminder_sms_minutes_before: int = 120
 
 
 class AppointmentCreate(AppointmentBase):
@@ -35,12 +39,17 @@ class AppointmentUpdate(BaseModel):
     appointment_end_datetime: datetime | None = None
     notes: str | None = None
     status: AppointmentStatus | None = None
+    reminder_email_enabled: bool | None = None
+    reminder_sms_enabled: bool | None = None
+    reminder_email_minutes_before: int | None = None
+    reminder_sms_minutes_before: int | None = None
 
 
 class AppointmentResponse(AppointmentBase):
     id: int
     patient: PatientResponse | None = None
     reminder_sent_at: datetime | None = None
+    reminder_next_run_at: datetime | None = None
     created_at: datetime
 
     class Config:

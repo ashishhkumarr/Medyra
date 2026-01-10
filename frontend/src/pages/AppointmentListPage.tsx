@@ -18,7 +18,7 @@ import {
 } from "../hooks/useAppointments";
 import { usePatients } from "../hooks/usePatients";
 import { usePageTitle } from "../hooks/usePageTitle";
-import { Appointment, AppointmentStatus } from "../services/appointments";
+import { Appointment, AppointmentStatus, simulateAppointmentReminder } from "../services/appointments";
 import { toast } from "../lib/toast";
 
 type AppointmentFormState = {
@@ -27,6 +27,10 @@ type AppointmentFormState = {
   doctor_name: string;
   department: string;
   notes: string;
+  reminder_email_enabled: boolean;
+  reminder_sms_enabled: boolean;
+  reminder_email_minutes_before: number;
+  reminder_sms_minutes_before: number;
 };
 
 const statusStyles: Record<string, string> = {
@@ -48,6 +52,9 @@ const STATUS_TABS: { key: StatusTab; label: string }[] = [
   { key: "unconfirmed", label: "Unconfirmed" },
   { key: "cancelled", label: "Cancelled" }
 ];
+
+const REMINDER_EMAIL_OPTIONS = [1440, 720, 240, 120, 60, 30];
+const REMINDER_SMS_OPTIONS = [240, 120, 60, 30, 15];
 
 const toInputValue = (value?: string) => {
   if (!value) return "";
@@ -126,12 +133,17 @@ const AppointmentListPage = () => {
   const [isCancelOpen, setIsCancelOpen] = useState(false);
   const [isCompleteOpen, setIsCompleteOpen] = useState(false);
   const [completeTarget, setCompleteTarget] = useState<Appointment | null>(null);
+  const [isSimulatingReminder, setIsSimulatingReminder] = useState(false);
   const [formState, setFormState] = useState<AppointmentFormState>({
     appointment_datetime: "",
     appointment_end_datetime: "",
     doctor_name: "",
     department: "",
-    notes: ""
+    notes: "",
+    reminder_email_enabled: false,
+    reminder_sms_enabled: false,
+    reminder_email_minutes_before: 1440,
+    reminder_sms_minutes_before: 120
   });
   const [formErrors, setFormErrors] = useState<Partial<Record<keyof AppointmentFormState, string>>>(
     {}
@@ -226,6 +238,39 @@ const AppointmentListPage = () => {
   };
 
   const getDerivedStatus = (appointment: Appointment) => normalizeStatus(appointment.status);
+
+  const getReminderState = (
+    appointment: Appointment,
+    startOverride?: string
+  ): { enabled: boolean; message: string } => {
+    const derivedStatus = getDerivedStatus(appointment);
+    const startTime = startOverride ?? appointment.appointment_datetime;
+    const parsedStart = startTime ? new Date(startTime).getTime() : NaN;
+    const isPast = !Number.isNaN(parsedStart) && parsedStart < Date.now();
+
+    if (derivedStatus === "Cancelled") {
+      return {
+        enabled: false,
+        message: "Cancelled appointments do not send reminders."
+      };
+    }
+
+    if (derivedStatus === "Completed" || isPast) {
+      return {
+        enabled: false,
+        message: "Reminders aren’t available for completed or past visits."
+      };
+    }
+
+    if (derivedStatus === "Unconfirmed") {
+      return {
+        enabled: false,
+        message: "Confirm the appointment to enable reminders."
+      };
+    }
+
+    return { enabled: true, message: "" };
+  };
 
   const statusCounts = useMemo(() => {
     const counts = {
@@ -374,7 +419,11 @@ const AppointmentListPage = () => {
       appointment_end_datetime: toInputValue(appointment.appointment_end_datetime),
       doctor_name: appointment.doctor_name,
       department: appointment.department ?? "",
-      notes: appointment.notes ?? ""
+      notes: appointment.notes ?? "",
+      reminder_email_enabled: appointment.reminder_email_enabled ?? false,
+      reminder_sms_enabled: appointment.reminder_sms_enabled ?? false,
+      reminder_email_minutes_before: appointment.reminder_email_minutes_before ?? 1440,
+      reminder_sms_minutes_before: appointment.reminder_sms_minutes_before ?? 120
     });
     setIsEditOpen(true);
   };
@@ -393,6 +442,7 @@ const AppointmentListPage = () => {
     setSelectedAppointment(null);
     setCompleteTarget(null);
     setActionError(null);
+    setIsSimulatingReminder(false);
   };
 
   const handleFieldChange = (
@@ -439,7 +489,11 @@ const AppointmentListPage = () => {
           appointment_end_datetime: formState.appointment_end_datetime || null,
           doctor_name: formState.doctor_name.trim(),
           department: formState.department.trim() || undefined,
-          notes: formState.notes.trim() || undefined
+          notes: formState.notes.trim() || undefined,
+          reminder_email_enabled: formState.reminder_email_enabled,
+          reminder_sms_enabled: formState.reminder_sms_enabled,
+          reminder_email_minutes_before: formState.reminder_email_minutes_before,
+          reminder_sms_minutes_before: formState.reminder_sms_minutes_before
         }
       });
       setSuccessMessage("Appointment updated successfully.");
@@ -509,6 +563,29 @@ const AppointmentListPage = () => {
       setActionError(getApiErrorMessage(undoError));
     }
   };
+
+  const handleSimulateReminder = async () => {
+    if (!selectedAppointment) return;
+    setActionError(null);
+    setIsSimulatingReminder(true);
+    try {
+      await simulateAppointmentReminder(selectedAppointment.id);
+      toast.success("Demo reminder simulated");
+    } catch (simulateError: any) {
+      const message = getApiErrorMessage(simulateError);
+      toast.error(message || "Unable to simulate reminder");
+      setActionError(message);
+    } finally {
+      setIsSimulatingReminder(false);
+    }
+  };
+
+  const editReminderState = selectedAppointment
+    ? getReminderState(selectedAppointment, formState.appointment_datetime)
+    : { enabled: false, message: "Confirm the appointment to enable reminders." };
+  const viewReminderState = selectedAppointment
+    ? getReminderState(selectedAppointment)
+    : { enabled: false, message: "Confirm the appointment to enable reminders." };
 
   if (isLoading) return <LoadingSpinner />;
   if (error) return <ErrorState message="Unable to fetch appointments." />;
@@ -740,6 +817,8 @@ const AppointmentListPage = () => {
                 const isConfirmed = derivedStatus === "Confirmed";
                 const isCompleted = derivedStatus === "Completed";
                 const isCancelled = derivedStatus === "Cancelled";
+                const startTime = new Date(appointment.appointment_datetime).getTime();
+                const isHistorical = isCompleted && !Number.isNaN(startTime) && startTime < Date.now();
                 const canEdit = isUnconfirmed || isConfirmed;
                 const canConfirm = isUnconfirmed;
                 const canMarkCompleted = isConfirmed;
@@ -770,11 +849,18 @@ const AppointmentListPage = () => {
                     <td className="px-4 py-3">{appointment.doctor_name}</td>
                     <td className="px-4 py-3">{appointment.department || "—"}</td>
                     <td className="px-4 py-3">
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[derivedStatus]}`}
-                      >
-                        {derivedStatus}
-                      </span>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span
+                          className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[derivedStatus]}`}
+                        >
+                          {derivedStatus}
+                        </span>
+                        {isHistorical && (
+                          <span className="rounded-full border border-border/60 bg-surface/70 px-2.5 py-1 text-[11px] font-semibold text-text-subtle">
+                            Past visit
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap justify-end gap-2">
@@ -901,6 +987,55 @@ const AppointmentListPage = () => {
                     </p>
                   </div>
                 </div>
+                <div className="rounded-3xl border border-border/60 bg-surface/70 px-4 py-4 text-sm text-text-muted shadow-sm backdrop-blur">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-text-subtle">
+                    Reminders (Demo)
+                  </p>
+                  <p className="mt-1 text-xs text-text-muted">
+                    Reminders are simulated in demo mode and do not send real messages.
+                  </p>
+                  <div className="mt-4 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <span className="text-sm text-text">Email reminder</span>
+                      <span className="text-xs text-text-subtle">
+                        {selectedAppointment.reminder_email_enabled ? "On" : "Off"}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <span className="text-sm text-text">SMS reminder (Demo)</span>
+                      <span className="text-xs text-text-subtle">
+                        {selectedAppointment.reminder_sms_enabled ? "On" : "Off"}
+                      </span>
+                    </div>
+                    {viewReminderState.enabled &&
+                      (selectedAppointment.reminder_email_enabled ||
+                        selectedAppointment.reminder_sms_enabled) &&
+                      selectedAppointment.reminder_next_run_at && (
+                        <p className="text-xs text-text-subtle">
+                          Next reminder:{" "}
+                          {new Date(selectedAppointment.reminder_next_run_at).toLocaleString()}{" "}
+                          (Demo)
+                        </p>
+                      )}
+                    {!viewReminderState.enabled && (
+                      <p className="text-xs text-text-subtle">{viewReminderState.message}</p>
+                    )}
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="secondary"
+                      onClick={handleSimulateReminder}
+                      disabled={
+                        !viewReminderState.enabled ||
+                        isSimulatingReminder ||
+                        !(selectedAppointment.reminder_email_enabled ||
+                          selectedAppointment.reminder_sms_enabled)
+                      }
+                    >
+                      {isSimulatingReminder ? "Sending..." : "Send test reminder (Demo)"}
+                    </Button>
+                  </div>
+                </div>
               </div>
               <div className="sticky bottom-0 flex flex-wrap justify-end gap-3 border-t border-border/60 bg-surface/85 px-6 py-4 backdrop-blur">
                 <Button variant="secondary" type="button" onClick={closeModals}>
@@ -967,6 +1102,94 @@ const AppointmentListPage = () => {
                     onChange={handleFieldChange}
                     placeholder="Add visit notes or prep instructions."
                   />
+                  <div className="rounded-3xl border border-border/60 bg-surface/70 px-4 py-4 text-sm text-text-muted shadow-sm backdrop-blur">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-text-subtle">
+                      Reminders (Demo)
+                    </p>
+                    <p className="mt-1 text-xs text-text-muted">
+                      Reminders are simulated in demo mode and do not send real messages.
+                    </p>
+                    <div className="mt-4 space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={formState.reminder_email_enabled}
+                            disabled={!editReminderState.enabled}
+                            onChange={(event) =>
+                              setFormState((prev) => ({
+                                ...prev,
+                                reminder_email_enabled: event.target.checked
+                              }))
+                            }
+                          />
+                          <span className="text-sm text-text">Email reminder</span>
+                        </label>
+                        <select
+                          value={formState.reminder_email_minutes_before}
+                          onChange={(event) =>
+                            setFormState((prev) => ({
+                              ...prev,
+                              reminder_email_minutes_before: Number(event.target.value)
+                            }))
+                          }
+                          disabled={!editReminderState.enabled}
+                          className="glass-input w-full max-w-[180px] text-xs"
+                        >
+                          {REMINDER_EMAIL_OPTIONS.map((minutes) => (
+                            <option key={minutes} value={minutes}>
+                              {minutes} min before
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={formState.reminder_sms_enabled}
+                            disabled={!editReminderState.enabled}
+                            onChange={(event) =>
+                              setFormState((prev) => ({
+                                ...prev,
+                                reminder_sms_enabled: event.target.checked
+                              }))
+                            }
+                          />
+                          <span className="text-sm text-text">SMS reminder (Demo)</span>
+                        </label>
+                        <select
+                          value={formState.reminder_sms_minutes_before}
+                          onChange={(event) =>
+                            setFormState((prev) => ({
+                              ...prev,
+                              reminder_sms_minutes_before: Number(event.target.value)
+                            }))
+                          }
+                          disabled={!editReminderState.enabled}
+                          className="glass-input w-full max-w-[180px] text-xs"
+                        >
+                          {REMINDER_SMS_OPTIONS.map((minutes) => (
+                            <option key={minutes} value={minutes}>
+                              {minutes} min before
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      {editReminderState.enabled &&
+                        (formState.reminder_email_enabled || formState.reminder_sms_enabled) &&
+                        selectedAppointment?.reminder_next_run_at && (
+                          <p className="text-xs text-text-subtle">
+                            Next reminder:{" "}
+                            {new Date(selectedAppointment.reminder_next_run_at).toLocaleString()}{" "}
+                            (Demo)
+                          </p>
+                        )}
+                      {!editReminderState.enabled && (
+                        <p className="text-xs text-text-subtle">{editReminderState.message}</p>
+                      )}
+                    </div>
+                  </div>
                   {actionError && <ErrorState message={actionError} />}
                 </div>
                 <div className="sticky bottom-0 flex flex-wrap justify-end gap-3 border-t border-border/60 bg-surface/85 px-6 py-4 backdrop-blur">

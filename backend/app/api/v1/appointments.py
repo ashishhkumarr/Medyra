@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session, selectinload
@@ -77,6 +77,66 @@ def _should_send_update_email(status_value: AppointmentStatus) -> bool:
     return status_value in {AppointmentStatus.confirmed, AppointmentStatus.scheduled}
 
 
+def _is_future_appointment(start_time: datetime | None, now: datetime) -> bool:
+    if not start_time:
+        return False
+    return start_time > now
+
+
+def _is_reminder_eligible(status_value: AppointmentStatus, start_time: datetime | None) -> bool:
+    return status_value == AppointmentStatus.confirmed and _is_future_appointment(
+        start_time, datetime.utcnow()
+    )
+
+
+def _compute_next_reminder_at(
+    start_time: datetime | None,
+    email_enabled: bool,
+    email_minutes: int,
+    sms_enabled: bool,
+    sms_minutes: int,
+) -> datetime | None:
+    if not start_time:
+        return None
+    reminder_times: list[datetime] = []
+    if email_enabled:
+        reminder_times.append(start_time - timedelta(minutes=email_minutes))
+    if sms_enabled:
+        reminder_times.append(start_time - timedelta(minutes=sms_minutes))
+    return min(reminder_times) if reminder_times else None
+
+
+def _refresh_reminder_next_run_at(appointment: Appointment) -> None:
+    if appointment.reminder_email_minutes_before is None:
+        appointment.reminder_email_minutes_before = 1440
+    if appointment.reminder_sms_minutes_before is None:
+        appointment.reminder_sms_minutes_before = 120
+    appointment.reminder_next_run_at = _compute_next_reminder_at(
+        appointment.appointment_datetime,
+        appointment.reminder_email_enabled,
+        appointment.reminder_email_minutes_before,
+        appointment.reminder_sms_enabled,
+        appointment.reminder_sms_minutes_before,
+    )
+
+
+def _enforce_reminder_rules(
+    appointment: Appointment, previous_enabled: bool
+) -> bool:
+    if not _is_reminder_eligible(appointment.status, appointment.appointment_datetime):
+        auto_disabled = (
+            appointment.reminder_email_enabled
+            or appointment.reminder_sms_enabled
+            or previous_enabled
+        )
+        appointment.reminder_email_enabled = False
+        appointment.reminder_sms_enabled = False
+        appointment.reminder_next_run_at = None
+        return auto_disabled
+    _refresh_reminder_next_run_at(appointment)
+    return False
+
+
 def _validate_time_range(start_time, end_time):
     if end_time and start_time and end_time <= start_time:
         raise HTTPException(
@@ -136,6 +196,9 @@ def _prepare_update_data(payload: AppointmentUpdate) -> dict:
         update_data["doctor_name"] = _normalize_doctor_name(
             update_data.get("doctor_name")
         )
+    for field in ("reminder_email_minutes_before", "reminder_sms_minutes_before"):
+        if field in update_data and update_data[field] is None:
+            update_data.pop(field)
     return update_data
 
 
@@ -147,6 +210,11 @@ def _snapshot_appointment(appointment: Appointment) -> dict:
         "department": appointment.department,
         "notes": appointment.notes,
         "status": appointment.status,
+        "reminder_email_enabled": appointment.reminder_email_enabled,
+        "reminder_sms_enabled": appointment.reminder_sms_enabled,
+        "reminder_email_minutes_before": appointment.reminder_email_minutes_before,
+        "reminder_sms_minutes_before": appointment.reminder_sms_minutes_before,
+        "reminder_next_run_at": appointment.reminder_next_run_at,
     }
 
 
@@ -170,6 +238,32 @@ def _build_update_metadata(old: dict, appointment: Appointment) -> dict:
         if old_value != new_value:
             changes[field] = {"old": old_value, "new": new_value}
     return {"changed_fields": list(changes.keys()), "changes": changes}
+
+
+REMINDER_FIELDS = (
+    "reminder_email_enabled",
+    "reminder_sms_enabled",
+    "reminder_email_minutes_before",
+    "reminder_sms_minutes_before",
+    "reminder_next_run_at",
+)
+
+REMINDER_SETTING_FIELDS = (
+    "reminder_email_enabled",
+    "reminder_sms_enabled",
+    "reminder_email_minutes_before",
+    "reminder_sms_minutes_before",
+)
+
+
+def _get_changed_reminder_fields(
+    old: dict, appointment: Appointment, fields: tuple[str, ...] = REMINDER_FIELDS
+) -> list[str]:
+    changed: list[str] = []
+    for field in fields:
+        if old.get(field) != getattr(appointment, field):
+            changed.append(field)
+    return changed
 
 
 def _patient_email(patient: Patient) -> str | None:
@@ -307,6 +401,10 @@ def create_appointment(
         payload_data.get("appointment_datetime"),
         payload_data.get("appointment_end_datetime"),
     )
+    payload_data.setdefault("reminder_email_enabled", False)
+    payload_data.setdefault("reminder_sms_enabled", False)
+    payload_data.setdefault("reminder_email_minutes_before", 1440)
+    payload_data.setdefault("reminder_sms_minutes_before", 120)
     status_value = payload_data.get("status", AppointmentStatus.unconfirmed)
     if _is_schedulable_status(status_value):
         _assert_no_overlapping_appointments(
@@ -314,6 +412,18 @@ def create_appointment(
             payload_data.get("appointment_datetime"),
             payload_data.get("appointment_end_datetime"),
             current_user.id,
+        )
+    if not _is_reminder_eligible(status_value, payload_data.get("appointment_datetime")):
+        payload_data["reminder_email_enabled"] = False
+        payload_data["reminder_sms_enabled"] = False
+        payload_data["reminder_next_run_at"] = None
+    else:
+        payload_data["reminder_next_run_at"] = _compute_next_reminder_at(
+            payload_data.get("appointment_datetime"),
+            payload_data.get("reminder_email_enabled", False),
+            payload_data.get("reminder_email_minutes_before", 1440),
+            payload_data.get("reminder_sms_enabled", False),
+            payload_data.get("reminder_sms_minutes_before", 120),
         )
     appointment = Appointment(**payload_data)
     db.add(appointment)
@@ -366,7 +476,12 @@ def update_appointment(
             current_user.id,
             appointment_id=appointment.id,
         )
+    previous_reminder_enabled = bool(
+        old_snapshot.get("reminder_email_enabled") or old_snapshot.get("reminder_sms_enabled")
+    )
+    user_touched_reminders = any(field in update_data for field in REMINDER_SETTING_FIELDS)
     _apply_appointment_update(appointment, update_data)
+    auto_disabled = _enforce_reminder_rules(appointment, previous_reminder_enabled)
     db.add(appointment)
     db.commit()
     db.refresh(appointment)
@@ -402,6 +517,31 @@ def update_appointment(
         metadata=metadata,
         request=request,
     )
+    reminder_changed_fields = _get_changed_reminder_fields(
+        old_snapshot, appointment, REMINDER_SETTING_FIELDS
+    )
+    if user_touched_reminders and reminder_changed_fields and not auto_disabled:
+        log_event(
+            db,
+            current_user,
+            action="appointment.reminder_updated",
+            entity_type="appointment",
+            entity_id=appointment.id,
+            summary="Updated reminder settings",
+            metadata={"changed_fields": reminder_changed_fields},
+            request=request,
+        )
+    if auto_disabled and previous_reminder_enabled:
+        log_event(
+            db,
+            current_user,
+            action="appointment.reminder_disabled_auto",
+            entity_type="appointment",
+            entity_id=appointment.id,
+            summary="Reminders disabled automatically",
+            metadata={"status": appointment.status},
+            request=request,
+        )
     if appointment.status == AppointmentStatus.cancelled:
         if old_snapshot["status"] != AppointmentStatus.cancelled:
             _send_cancellation_email(db, appointment, appointment.patient, old_snapshot)
@@ -443,7 +583,12 @@ def patch_appointment(
             current_user.id,
             appointment_id=appointment.id,
         )
+    previous_reminder_enabled = bool(
+        old_snapshot.get("reminder_email_enabled") or old_snapshot.get("reminder_sms_enabled")
+    )
+    user_touched_reminders = any(field in update_data for field in REMINDER_SETTING_FIELDS)
     _apply_appointment_update(appointment, update_data)
+    auto_disabled = _enforce_reminder_rules(appointment, previous_reminder_enabled)
     db.add(appointment)
     db.commit()
     db.refresh(appointment)
@@ -479,6 +624,31 @@ def patch_appointment(
         metadata=metadata,
         request=request,
     )
+    reminder_changed_fields = _get_changed_reminder_fields(
+        old_snapshot, appointment, REMINDER_SETTING_FIELDS
+    )
+    if user_touched_reminders and reminder_changed_fields and not auto_disabled:
+        log_event(
+            db,
+            current_user,
+            action="appointment.reminder_updated",
+            entity_type="appointment",
+            entity_id=appointment.id,
+            summary="Updated reminder settings",
+            metadata={"changed_fields": reminder_changed_fields},
+            request=request,
+        )
+    if auto_disabled and previous_reminder_enabled:
+        log_event(
+            db,
+            current_user,
+            action="appointment.reminder_disabled_auto",
+            entity_type="appointment",
+            entity_id=appointment.id,
+            summary="Reminders disabled automatically",
+            metadata={"status": appointment.status},
+            request=request,
+        )
     if appointment.status == AppointmentStatus.cancelled:
         if old_snapshot["status"] != AppointmentStatus.cancelled:
             _send_cancellation_email(db, appointment, appointment.patient, old_snapshot)
@@ -502,8 +672,12 @@ def cancel_appointment(
 ):
     appointment = _get_appointment(db, appointment_id, current_user.id)
     if appointment.status != AppointmentStatus.cancelled:
+        previous_reminder_enabled = (
+            appointment.reminder_email_enabled or appointment.reminder_sms_enabled
+        )
         old_snapshot = _snapshot_appointment(appointment)
         appointment.status = AppointmentStatus.cancelled
+        auto_disabled = _enforce_reminder_rules(appointment, previous_reminder_enabled)
         db.add(appointment)
         db.commit()
         db.refresh(appointment)
@@ -517,6 +691,17 @@ def cancel_appointment(
             metadata={"status": appointment.status},
             request=request,
         )
+        if auto_disabled and previous_reminder_enabled:
+            log_event(
+                db,
+                current_user,
+                action="appointment.reminder_disabled_auto",
+                entity_type="appointment",
+                entity_id=appointment.id,
+                summary="Reminders disabled automatically",
+                metadata={"status": appointment.status},
+                request=request,
+            )
         _send_cancellation_email(db, appointment, appointment.patient, old_snapshot)
     return appointment
 
@@ -530,7 +715,11 @@ def complete_appointment(
 ):
     appointment = _get_appointment(db, appointment_id, current_user.id)
     if appointment.status != AppointmentStatus.completed:
+        previous_reminder_enabled = (
+            appointment.reminder_email_enabled or appointment.reminder_sms_enabled
+        )
         appointment.status = AppointmentStatus.completed
+        auto_disabled = _enforce_reminder_rules(appointment, previous_reminder_enabled)
         db.add(appointment)
         db.commit()
         db.refresh(appointment)
@@ -544,7 +733,72 @@ def complete_appointment(
             metadata={"status": appointment.status},
             request=request,
         )
+        if auto_disabled and previous_reminder_enabled:
+            log_event(
+                db,
+                current_user,
+                action="appointment.reminder_disabled_auto",
+                entity_type="appointment",
+                entity_id=appointment.id,
+                summary="Reminders disabled automatically",
+                metadata={"status": appointment.status},
+                request=request,
+            )
     return appointment
+
+
+@router.post("/{appointment_id}/reminders/simulate")
+def simulate_reminder(
+    appointment_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin),
+    request: Request = None,
+):
+    appointment = _get_appointment(db, appointment_id, current_user.id)
+    if appointment.status != AppointmentStatus.confirmed:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Reminders are only available for confirmed appointments.",
+        )
+    if not _is_future_appointment(appointment.appointment_datetime, datetime.utcnow()):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Reminders are only available for future appointments.",
+        )
+    channels: list[str] = []
+    if appointment.reminder_email_enabled:
+        channels.append("email")
+    if appointment.reminder_sms_enabled:
+        channels.append("sms")
+    if not channels:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No reminders are enabled for this appointment.",
+        )
+    scheduled_for = appointment.reminder_next_run_at or _compute_next_reminder_at(
+        appointment.appointment_datetime,
+        appointment.reminder_email_enabled,
+        appointment.reminder_email_minutes_before,
+        appointment.reminder_sms_enabled,
+        appointment.reminder_sms_minutes_before,
+    )
+    log_event(
+        db,
+        current_user,
+        action="appointment.reminder_simulated",
+        entity_type="appointment",
+        entity_id=appointment.id,
+        summary="Simulated appointment reminder",
+        metadata={"channels": channels, "scheduled_for": scheduled_for},
+        request=request,
+    )
+    return {
+        "ok": True,
+        "simulated": True,
+        "channels": channels,
+        "scheduled_for": scheduled_for,
+        "message": "Demo reminder simulated (no message sent).",
+    }
 
 
 @router.delete("/{appointment_id}", status_code=status.HTTP_204_NO_CONTENT)

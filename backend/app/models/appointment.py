@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum as PyEnum
 
-from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Column, DateTime, Enum, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
 from app.db.session import Base
@@ -26,6 +26,11 @@ class Appointment(Base):
     appointment_datetime = Column(DateTime, nullable=False)
     appointment_end_datetime = Column(DateTime, nullable=True)
     reminder_sent_at = Column(DateTime, nullable=True)
+    reminder_email_enabled = Column(Boolean, nullable=False, default=False)
+    reminder_sms_enabled = Column(Boolean, nullable=False, default=False)
+    reminder_email_minutes_before = Column(Integer, nullable=False, default=1440)
+    reminder_sms_minutes_before = Column(Integer, nullable=False, default=120)
+    reminder_next_run_at = Column(DateTime, nullable=True)
     notes = Column(Text, nullable=True)
     status = Column(
         Enum(AppointmentStatus),

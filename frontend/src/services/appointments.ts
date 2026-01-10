@@ -18,6 +18,11 @@ export interface Appointment {
   appointment_end_datetime?: string;
   status: AppointmentStatus;
   notes?: string;
+  reminder_email_enabled?: boolean;
+  reminder_sms_enabled?: boolean;
+  reminder_email_minutes_before?: number;
+  reminder_sms_minutes_before?: number;
+  reminder_next_run_at?: string | null;
 }
 
 export interface AppointmentUpdatePayload {
@@ -27,6 +32,10 @@ export interface AppointmentUpdatePayload {
   appointment_end_datetime?: string | null;
   notes?: string;
   status?: AppointmentStatus;
+  reminder_email_enabled?: boolean;
+  reminder_sms_enabled?: boolean;
+  reminder_email_minutes_before?: number;
+  reminder_sms_minutes_before?: number;
 }
 
 export const fetchAppointments = async (): Promise<Appointment[]> => {
@@ -60,6 +69,13 @@ export const cancelAppointment = async (appointmentId: number): Promise<Appointm
 export const completeAppointment = async (appointmentId: number): Promise<Appointment> => {
   const { data } = await apiClient.patch<Appointment>(
     `/appointments/${appointmentId}/complete`
+  );
+  return data;
+};
+
+export const simulateAppointmentReminder = async (appointmentId: number) => {
+  const { data } = await apiClient.post(
+    `/appointments/${appointmentId}/reminders/simulate`
   );
   return data;
 };

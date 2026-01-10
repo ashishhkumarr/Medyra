@@ -41,7 +41,9 @@ const CreateAppointmentPage = () => {
 
   const handleSubmit = async (values: any) => {
     setApiError(null);
-    const defaultStatus: AppointmentStatus = "Unconfirmed";
+    const startTime = new Date(values.appointment_datetime).getTime();
+    const isPast = !Number.isNaN(startTime) && startTime < Date.now();
+    const defaultStatus: AppointmentStatus = isPast ? "Completed" : "Unconfirmed";
     const payload: Partial<Appointment> = {
       patient_id: values.patient_id,
       appointment_datetime: values.appointment_datetime,
@@ -49,7 +51,11 @@ const CreateAppointmentPage = () => {
       doctor_name: values.doctor_name || undefined,
       department: values.department || undefined,
       notes: values.notes || undefined,
-      status: defaultStatus
+      status: defaultStatus,
+      reminder_email_enabled: values.reminder_email_enabled ?? false,
+      reminder_sms_enabled: values.reminder_sms_enabled ?? false,
+      reminder_email_minutes_before: values.reminder_email_minutes_before ?? 1440,
+      reminder_sms_minutes_before: values.reminder_sms_minutes_before ?? 120
     };
     try {
       await mutation.mutateAsync(payload);

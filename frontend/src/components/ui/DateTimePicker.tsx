@@ -1,4 +1,5 @@
 import { forwardRef, useMemo, useState } from "react";
+import type { InputHTMLAttributes, KeyboardEvent as ReactKeyboardEvent, ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Calendar } from "lucide-react";
 import DatePicker from "react-datepicker";
@@ -51,7 +52,7 @@ const parseDateTime = (value?: string) => {
   return Number.isNaN(parsed.getTime()) ? null : parsed;
 };
 
-interface GlassInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+interface GlassInputProps extends InputHTMLAttributes<HTMLInputElement> {
   onToggle?: () => void;
 }
 
@@ -87,7 +88,7 @@ GlassInput.displayName = "GlassInput";
 
 export const DateTimePicker = (props: DateTimePickerProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const PopperContainer = ({ children }: { children: React.ReactNode }) =>
+  const PopperContainer = ({ children }: { children: ReactNode }) =>
     createPortal(children, document.body);
   const commonInputClass = props.error ? "border-danger focus:ring-danger/40" : "";
   const currentYear = new Date().getFullYear();
@@ -107,7 +108,7 @@ export const DateTimePicker = (props: DateTimePickerProps) => {
     open: isOpen,
     onClickOutside: () => setIsOpen(false),
     onInputClick: () => null,
-    onKeyDown: (event: React.KeyboardEvent) => {
+    onKeyDown: (event: ReactKeyboardEvent) => {
       if (event.key === "Escape") {
         setIsOpen(false);
       }

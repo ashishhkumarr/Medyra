@@ -14,6 +14,10 @@ interface Props {
     appointment_datetime: string;
     appointment_end_datetime?: string;
     notes?: string;
+    reminder_email_enabled?: boolean;
+    reminder_sms_enabled?: boolean;
+    reminder_email_minutes_before?: number;
+    reminder_sms_minutes_before?: number;
   }) => Promise<void> | void;
   isSubmitting?: boolean;
 }
@@ -25,7 +29,11 @@ export const AppointmentForm = ({ patients, onSubmit, isSubmitting }: Props) => 
     appointment_end_datetime: "",
     doctor_name: "",
     department: "",
-    notes: ""
+    notes: "",
+    reminder_email_enabled: false,
+    reminder_sms_enabled: false,
+    reminder_email_minutes_before: 1440,
+    reminder_sms_minutes_before: 120
   });
   const [searchTerm, setSearchTerm] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -46,6 +54,12 @@ export const AppointmentForm = ({ patients, onSubmit, isSubmitting }: Props) => 
       return name.includes(trimmed) || email.includes(trimmed) || phone.includes(trimmed);
     });
   }, [patients, searchTerm]);
+
+  const isPastAppointment = useMemo(() => {
+    if (!formState.appointment_datetime) return false;
+    const startTime = new Date(formState.appointment_datetime).getTime();
+    return !Number.isNaN(startTime) && startTime < Date.now();
+  }, [formState.appointment_datetime]);
 
   const handleChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -84,6 +98,11 @@ export const AppointmentForm = ({ patients, onSubmit, isSubmitting }: Props) => 
     if (!validate()) return;
     await onSubmit(formState);
   };
+
+  const hasStartTime = Boolean(formState.appointment_datetime);
+  const reminderMessage = isPastAppointment
+    ? "Reminders aren’t available for completed or past visits."
+    : "Confirm the appointment to enable reminders.";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
@@ -147,6 +166,103 @@ export const AppointmentForm = ({ patients, onSubmit, isSubmitting }: Props) => 
           placeholder="Cardiology"
         />
       </div>
+      {isPastAppointment && (
+        <p className="text-xs text-text-muted">
+          This is a past date. The appointment will be saved as a completed visit (no reminders).
+        </p>
+      )}
+      <div className="rounded-3xl border border-border/60 bg-surface/70 px-4 py-4 text-sm text-text-muted shadow-sm backdrop-blur">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-text-subtle">
+              Reminders (Demo)
+            </p>
+            <p className="mt-1 text-xs text-text-muted">
+              Reminders are simulated in demo mode and do not send real messages.
+            </p>
+          </div>
+        </div>
+        <div className="mt-4 space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={formState.reminder_email_enabled}
+                            onChange={(event) =>
+                              setFormState((prev) => ({
+                                ...prev,
+                                reminder_email_enabled: event.target.checked
+                              }))
+                            }
+                          />
+                          <span className="text-sm text-text">Email reminder</span>
+                        </label>
+                        <select
+                          value={formState.reminder_email_minutes_before}
+                          onChange={(event) =>
+                            setFormState((prev) => ({
+                              ...prev,
+                              reminder_email_minutes_before: Number(event.target.value)
+                            }))
+                          }
+                          disabled={!formState.reminder_email_enabled || !hasStartTime}
+                          className={`glass-input w-full max-w-[180px] text-xs ${
+                            !formState.reminder_email_enabled || !hasStartTime
+                              ? "cursor-not-allowed opacity-60"
+                              : ""
+                          }`}
+                        >
+                          {[1440, 720, 240, 120, 60, 30].map((minutes) => (
+                            <option key={minutes} value={minutes}>
+                              {minutes} min before
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <label className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={formState.reminder_sms_enabled}
+                            onChange={(event) =>
+                              setFormState((prev) => ({
+                                ...prev,
+                                reminder_sms_enabled: event.target.checked
+                              }))
+                            }
+                          />
+                          <span className="text-sm text-text">SMS reminder (Demo)</span>
+                        </label>
+                        <select
+                          value={formState.reminder_sms_minutes_before}
+                          onChange={(event) =>
+                            setFormState((prev) => ({
+                              ...prev,
+                              reminder_sms_minutes_before: Number(event.target.value)
+                            }))
+                          }
+                          disabled={!formState.reminder_sms_enabled || !hasStartTime}
+                          className={`glass-input w-full max-w-[180px] text-xs ${
+                            !formState.reminder_sms_enabled || !hasStartTime
+                              ? "cursor-not-allowed opacity-60"
+                              : ""
+                          }`}
+                        >
+                          {[240, 120, 60, 30, 15].map((minutes) => (
+                            <option key={minutes} value={minutes}>
+                              {minutes} min before
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      {!hasStartTime && !isPastAppointment && (
+                        <p className="text-xs text-text-subtle">
+                          Select a start time to enable reminder scheduling.
+                        </p>
+                      )}
+                      <p className="text-xs text-text-subtle">{reminderMessage}</p>
+                    </div>
+                  </div>
       <TextAreaField
         label="Notes (optional)"
         name="notes"
