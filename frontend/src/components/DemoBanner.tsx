@@ -45,7 +45,7 @@ export const DemoBanner = () => {
   if (!IS_DEMO) return null;
 
   return (
-    <div className="border-b border-border/60 bg-surface/70 text-text-muted backdrop-blur">
+    <div className="safe-top border-b border-border/60 bg-surface/70 text-text-muted backdrop-blur">
       <div className="mx-auto w-full px-4 sm:px-6 lg:px-10">
         <div className="mx-auto w-full max-w-[1400px]">
           <div className="flex items-center justify-between gap-3 px-4 py-2 text-xs font-semibold sm:text-sm">

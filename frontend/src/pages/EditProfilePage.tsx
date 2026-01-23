@@ -394,7 +394,7 @@ const EditProfilePage = () => {
             aria-labelledby="delete-account-title"
             aria-describedby="delete-account-desc"
             tabIndex={-1}
-            className="relative z-10 w-full max-w-lg overflow-hidden rounded-[32px] border border-border/60 bg-surface/85 shadow-card backdrop-blur-xl animate-modalIn"
+            className="relative z-10 w-full max-w-[95vw] overflow-hidden rounded-[32px] border border-border/60 bg-surface/85 shadow-card backdrop-blur-xl animate-modalIn sm:max-w-lg"
           >
             <div className="border-b border-border/60 px-6 py-4">
               <h3 id="delete-account-title" className="text-lg font-semibold text-text">

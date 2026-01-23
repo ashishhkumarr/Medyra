@@ -53,7 +53,7 @@ const sections: Array<{
 
 export const WhatsNextPanel = () => {
   return (
-    <div className="glass-card animate-fadeUp p-6">
+    <div className="glass-card animate-fadeUp p-6 transition hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_28px_60px_rgba(34,211,191,0.16)]">
       <div className="space-y-1">
         <h3 className="text-lg font-semibold text-text">What’s next for Medyra</h3>
         <p className="text-sm text-text-muted">
@@ -67,7 +67,7 @@ export const WhatsNextPanel = () => {
           return (
             <div
               key={section.title}
-              className="rounded-2xl border border-border/60 bg-surface/60 p-4 shadow-sm backdrop-blur"
+              className="rounded-2xl border border-border/60 bg-surface/60 p-4 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:border-primary/30 hover:bg-surface/70 hover:shadow-[0_18px_40px_rgba(34,211,191,0.16)]"
             >
               <div className="flex items-center gap-2 text-sm font-semibold text-text">
                 <Icon className="h-4 w-4 text-primary" />

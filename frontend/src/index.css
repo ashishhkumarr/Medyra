@@ -71,6 +71,7 @@ body {
   font-size: 18px;
   line-height: 1.65;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 #root {
@@ -80,6 +81,7 @@ body {
 .app-shell {
   position: relative;
   min-height: 100vh;
+  padding-bottom: env(safe-area-inset-bottom);
   background: radial-gradient(circle at 20% 10%, rgba(208, 225, 255, 0.7), transparent 40%),
     radial-gradient(circle at 80% 0%, rgba(255, 213, 236, 0.7), transparent 45%),
     radial-gradient(circle at 35% 35%, rgba(210, 255, 246, 0.6), transparent 50%),
@@ -154,6 +156,14 @@ body {
   @apply rounded-2xl border px-4 py-3 text-base text-text shadow-sm backdrop-blur transition-all duration-200 placeholder:text-text-subtle focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30;
 }
 
+.safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -223,6 +233,12 @@ body {
   border-color: rgb(var(--color-primary) / 0.2);
   color: rgb(var(--color-text));
   box-shadow: 0 10px 20px rgb(var(--color-primary) / 0.2);
+}
+
+@media (max-width: 640px) {
+  .glass-input {
+    font-size: 16px;
+  }
 }
 
 .mt-date-picker .react-datepicker__day--selected,

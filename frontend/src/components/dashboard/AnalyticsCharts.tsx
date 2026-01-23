@@ -12,6 +12,7 @@ interface AnalyticsChartsProps {
   appointmentsByDay: DayPoint[];
   newPatientsByWeek: WeekPoint[];
   appointmentsByStatus: StatusPoint[];
+  refreshKey?: number;
 }
 
 const ChartCard = ({
@@ -65,7 +66,8 @@ const toStatusBars = (data: StatusPoint[]): BarDatum[] =>
 export const AnalyticsCharts = ({
   appointmentsByDay,
   newPatientsByWeek,
-  appointmentsByStatus
+  appointmentsByStatus,
+  refreshKey
 }: AnalyticsChartsProps) => {
   const weeklySeries = newPatientsByWeek.map((point) => ({
     date: point.weekStart,
@@ -88,6 +90,7 @@ export const AnalyticsCharts = ({
             <LineChartD3
               data={appointmentsByDay}
               ariaLabel="Appointments over the last 30 days"
+              animationKey={refreshKey}
             />
           )}
         </ChartCard>
@@ -98,6 +101,7 @@ export const AnalyticsCharts = ({
             <LineChartD3
               data={weeklySeries}
               ariaLabel="New patients over the last 12 weeks"
+              animationKey={refreshKey}
             />
           )}
         </ChartCard>
@@ -109,6 +113,7 @@ export const AnalyticsCharts = ({
           <BarChartD3
             data={toStatusBars(appointmentsByStatus)}
             ariaLabel="Appointments by status"
+            animationKey={refreshKey}
           />
         )}
       </ChartCard>

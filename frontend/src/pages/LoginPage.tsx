@@ -5,6 +5,7 @@ import { Button } from "../components/ui/Button";
 import { InputField } from "../components/ui/FormField";
 import { useAuth } from "../hooks/useAuth";
 import { usePageTitle } from "../hooks/usePageTitle";
+import { BrandLogo } from "../components/BrandLogo";
 
 const LoginPage = () => {
   usePageTitle("Login");
@@ -33,11 +34,12 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="relative flex min-h-[70vh] items-center justify-center overflow-hidden px-4 py-10">
+    // Mobile alignment: avoid double horizontal padding (App main already provides px-4).
+    <div className="relative flex w-full min-h-screen items-center justify-center overflow-hidden px-0 py-10 sm:min-h-[70vh]">
       <div className="pointer-events-none absolute left-12 top-10 h-32 w-32 rounded-full bg-gradient-to-br from-secondary/40 to-surface/60 blur-2xl" />
       <div className="pointer-events-none absolute right-10 top-24 h-24 w-24 rounded-full bg-gradient-to-br from-primary/40 to-surface/60 blur-2xl" />
       <div className="pointer-events-none absolute bottom-10 left-10 h-28 w-28 rounded-full bg-gradient-to-br from-danger-soft/60 to-surface/60 blur-2xl" />
-      <div className="relative z-10 grid w-full max-w-6xl gap-10 rounded-[36px] border border-border/60 bg-surface/70 p-6 shadow-card backdrop-blur-xl sm:p-10 lg:p-12 xl:grid-cols-2">
+      <div className="relative z-10 mx-auto grid w-full max-w-[460px] gap-10 rounded-[36px] border border-border/60 bg-surface/70 p-6 shadow-card backdrop-blur-xl sm:max-w-6xl sm:p-10 lg:p-12 xl:grid-cols-2">
         <div className="rounded-3xl border border-border/60 bg-surface/70 p-8 shadow-card backdrop-blur animate-fadeUp">
           <p className="text-sm font-medium uppercase tracking-wide text-primary">Clinic Portal</p>
           <h1 className="mt-3 text-3xl font-semibold text-text">Medyra Admin Portal</h1>
@@ -62,6 +64,9 @@ const LoginPage = () => {
         <div className="glass-card animate-fadeUp border border-border/60 p-8 shadow-card">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
+              <div className="flex justify-center">
+                <BrandLogo className="h-14 w-14 opacity-95" />
+              </div>
               <h2 className="text-2xl font-semibold text-text">Welcome Back</h2>
               <p className="text-sm text-text-muted">Sign in with your clinic credentials.</p>
             </div>

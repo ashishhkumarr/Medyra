@@ -6,6 +6,7 @@ import { InputField } from "../components/ui/FormField";
 import { requestSignupOtp, signupBypass, signupRequest, verifySignupOtp } from "../services/auth";
 import { useAuthContext } from "../context/AuthContext";
 import { usePageTitle } from "../hooks/usePageTitle";
+import { BrandLogo } from "../components/BrandLogo";
 
 type FormState = {
   first_name: string;
@@ -243,13 +244,17 @@ const SignupPage = () => {
   };
 
   return (
-    <div className="relative flex min-h-[70vh] items-center justify-center px-4 py-10">
+    // Mobile alignment: avoid double horizontal padding (App main already provides px-4).
+    <div className="relative flex w-full min-h-screen items-center justify-center overflow-hidden px-0 py-10 sm:min-h-[70vh]">
       <div className="pointer-events-none absolute left-10 top-10 h-32 w-32 rounded-full bg-gradient-to-br from-secondary/40 to-surface/60 blur-2xl" />
       <div className="pointer-events-none absolute right-10 top-16 h-24 w-24 rounded-full bg-gradient-to-br from-primary/40 to-surface/60 blur-2xl" />
       <div className="pointer-events-none absolute bottom-10 right-12 h-28 w-28 rounded-full bg-gradient-to-br from-warning-soft/70 to-surface/60 blur-2xl" />
-      <div className="relative z-10 mx-auto w-full max-w-6xl space-y-6 rounded-[36px] border border-border/60 bg-surface/75 p-6 shadow-card backdrop-blur-xl animate-fadeUp">
+      <div className="relative z-10 mx-auto w-full max-w-[520px] space-y-6 rounded-[36px] border border-border/60 bg-surface/75 p-6 shadow-card backdrop-blur-xl animate-fadeUp sm:max-w-6xl">
         <div className="flex flex-col gap-3 border-b border-border/60 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
+            <div className="flex justify-center sm:justify-start">
+              <BrandLogo className="h-14 w-14 opacity-95" />
+            </div>
             <p className="text-sm font-medium uppercase tracking-wide text-primary">Clinic onboarding</p>
             <h1 className="mt-1 text-3xl font-semibold text-text">Create your Medyra account</h1>
             <p className="text-sm text-text-muted">

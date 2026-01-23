@@ -14,9 +14,15 @@ interface BarChartD3Props {
   data: BarDatum[];
   height?: number;
   ariaLabel: string;
+  animationKey?: number;
 }
 
-export const BarChartD3 = ({ data, height = 280, ariaLabel }: BarChartD3Props) => {
+export const BarChartD3 = ({
+  data,
+  height = 280,
+  ariaLabel,
+  animationKey
+}: BarChartD3Props) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const { width } = useResizeObserver(containerRef);
@@ -168,7 +174,7 @@ export const BarChartD3 = ({ data, height = 280, ariaLabel }: BarChartD3Props) =
     return () => {
       svg.selectAll("*").remove();
     };
-  }, [data, height, width, prefersReducedMotion]);
+  }, [data, height, width, prefersReducedMotion, animationKey]);
 
   return (
     <div ref={containerRef} className="relative">

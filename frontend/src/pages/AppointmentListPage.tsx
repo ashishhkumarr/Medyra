@@ -606,7 +606,7 @@ const AppointmentListPage = () => {
   if (error) return <ErrorState message="Unable to fetch appointments." />;
 
   return (
-    <Card className="animate-fadeUp space-y-5">
+    <Card className="animate-fadeUp space-y-5 p-4 sm:p-6">
       <SectionHeader
         title="Appointments"
         description="Review scheduled visits and recent activity."
@@ -667,7 +667,7 @@ const AppointmentListPage = () => {
                   <div className="absolute inset-0" onMouseDown={() => setFilterOpen(false)} />
                   <div
                     ref={filterPanelRef}
-                    className="absolute right-6 top-28 w-[320px] rounded-3xl border border-border/70 bg-surface/85 p-4 text-sm text-text-muted shadow-card backdrop-blur"
+                    className="absolute left-4 right-4 top-24 rounded-3xl border border-border/70 bg-surface/85 p-4 text-sm text-text-muted shadow-card backdrop-blur sm:left-auto sm:right-6 sm:top-28 sm:w-[320px]"
                     onMouseDown={(event) => event.stopPropagation()}
                     onClick={(event) => event.stopPropagation()}
                   >
@@ -807,122 +807,242 @@ const AppointmentListPage = () => {
       )}
 
       {!!filteredAppointments.length && (
-        <div className="overflow-x-auto rounded-2xl border border-border/60 bg-surface/60 shadow-sm backdrop-blur">
-          <table className="min-w-full text-left text-sm text-text-muted">
-            <thead className="bg-surface/75 text-xs uppercase tracking-wide text-text-subtle backdrop-blur">
-              <tr>
-                <th className="px-4 py-3 font-medium">Patient</th>
-                <th className="px-4 py-3 font-medium">Date & Time</th>
-                <th className="px-4 py-3 font-medium">Contact</th>
-                <th className="px-4 py-3 font-medium">Doctor</th>
-                <th className="px-4 py-3 font-medium">Department</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/40 bg-surface/60">
-              {filteredAppointments.map((appointment) => {
-                const { dateLabel, timeRange } = formatDateTimeCell(appointment);
-                const patientInfo = appointment.patient ?? patientById.get(appointment.patient_id);
-                const patientName = patientInfo?.full_name ?? `Patient #${appointment.patient_id}`;
-                const contactPhone = patientInfo?.phone;
-                const contactEmail = patientInfo?.email;
-                const derivedStatus = getDerivedStatus(appointment);
-                const isUnconfirmed = derivedStatus === "Unconfirmed";
-                const isConfirmed = derivedStatus === "Confirmed";
-                const isCompleted = derivedStatus === "Completed";
-                const isCancelled = derivedStatus === "Cancelled";
-                const startTime = new Date(appointment.appointment_datetime).getTime();
-                const isHistorical = isCompleted && !Number.isNaN(startTime) && startTime < Date.now();
-                const canEdit = isUnconfirmed || isConfirmed;
-                const canConfirm = isUnconfirmed;
-                const canMarkCompleted = isConfirmed;
-                const canCancel = isUnconfirmed || isConfirmed;
-                return (
-                  <tr key={appointment.id} className="transition hover:bg-surface/80">
-                    <td className="px-4 py-3">
-                      <p className="text-sm font-semibold text-text">{patientName}</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="text-sm font-medium text-text">{dateLabel}</p>
-                      <p className="text-xs text-text-subtle">{timeRange}</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      {contactPhone || contactEmail ? (
-                        <div className="space-y-1 text-xs text-text-muted">
-                          {contactPhone && (
-                            <p className="text-sm font-medium text-text">{contactPhone}</p>
-                          )}
-                          {contactEmail && (
-                            <p className="text-xs text-text-subtle">{contactEmail}</p>
+        <>
+          <div className="space-y-3 md:hidden">
+            {filteredAppointments.map((appointment) => {
+              const { dateLabel, timeRange } = formatDateTimeCell(appointment);
+              const patientInfo = appointment.patient ?? patientById.get(appointment.patient_id);
+              const patientName = patientInfo?.full_name ?? `Patient #${appointment.patient_id}`;
+              const contactPhone = patientInfo?.phone;
+              const contactEmail = patientInfo?.email;
+              const derivedStatus = getDerivedStatus(appointment);
+              const isUnconfirmed = derivedStatus === "Unconfirmed";
+              const isConfirmed = derivedStatus === "Confirmed";
+              const isCompleted = derivedStatus === "Completed";
+              const startTime = new Date(appointment.appointment_datetime).getTime();
+              const isHistorical =
+                isCompleted && !Number.isNaN(startTime) && startTime < Date.now();
+              const canEdit = isUnconfirmed || isConfirmed;
+              const canConfirm = isUnconfirmed;
+              const canMarkCompleted = isConfirmed;
+              const canCancel = isUnconfirmed || isConfirmed;
+              return (
+                <Card key={appointment.id} className="p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-base font-semibold text-text">{patientName}</p>
+                      <p className="text-xs text-text-subtle">
+                        {dateLabel} · {timeRange}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[derivedStatus]}`}
+                      >
+                        {derivedStatus}
+                      </span>
+                      {isHistorical && (
+                        <span className="rounded-full border border-border/60 bg-surface/70 px-2.5 py-1 text-[11px] font-semibold text-text-subtle">
+                          Past visit
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="mt-3 grid gap-2 text-sm text-text-muted">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs uppercase tracking-wide text-text-subtle">
+                        Contact
+                      </span>
+                      <span>{contactPhone || "—"}</span>
+                      {contactEmail && (
+                        <span className="text-xs text-text-subtle">{contactEmail}</span>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs uppercase tracking-wide text-text-subtle">
+                        Doctor
+                      </span>
+                      <span>{appointment.doctor_name || "—"}</span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs uppercase tracking-wide text-text-subtle">
+                        Department
+                      </span>
+                      <span>{appointment.department || "—"}</span>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="min-h-[44px]"
+                      onClick={() => handleView(appointment)}
+                    >
+                      View
+                    </Button>
+                    {canEdit && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="min-h-[44px]"
+                        onClick={() => handleEdit(appointment)}
+                      >
+                        Edit
+                      </Button>
+                    )}
+                    {canConfirm && (
+                      <button
+                        type="button"
+                        onClick={() => handleConfirm(appointment)}
+                        disabled={updateAppointment.isPending}
+                        className="min-h-[44px] rounded-full border border-success/30 bg-success-soft/60 px-4 py-2 text-xs font-semibold text-success transition hover:border-success/40 hover:bg-success-soft/80 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/40 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        Confirm
+                      </button>
+                    )}
+                    {canMarkCompleted && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="min-h-[44px]"
+                        onClick={() => handleCompletePrompt(appointment)}
+                      >
+                        Mark Completed
+                      </Button>
+                    )}
+                    {canCancel && (
+                      <button
+                        type="button"
+                        onClick={() => handleCancelPrompt(appointment)}
+                        className="min-h-[44px] rounded-full border border-danger/30 bg-danger-soft/60 px-4 py-2 text-xs font-semibold text-danger transition hover:border-danger/40 hover:bg-danger-soft/80 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/40 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+          <div className="hidden overflow-x-auto rounded-2xl border border-border/60 bg-surface/60 shadow-sm backdrop-blur md:block">
+            <table className="min-w-full text-left text-sm text-text-muted">
+              <thead className="bg-surface/75 text-xs uppercase tracking-wide text-text-subtle backdrop-blur">
+                <tr>
+                  <th className="px-4 py-3 font-medium">Patient</th>
+                  <th className="px-4 py-3 font-medium">Date & Time</th>
+                  <th className="px-4 py-3 font-medium">Contact</th>
+                  <th className="px-4 py-3 font-medium">Doctor</th>
+                  <th className="px-4 py-3 font-medium">Department</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
+                  <th className="px-4 py-3 font-medium text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border/40 bg-surface/60">
+                {filteredAppointments.map((appointment) => {
+                  const { dateLabel, timeRange } = formatDateTimeCell(appointment);
+                  const patientInfo =
+                    appointment.patient ?? patientById.get(appointment.patient_id);
+                  const patientName =
+                    patientInfo?.full_name ?? `Patient #${appointment.patient_id}`;
+                  const contactPhone = patientInfo?.phone;
+                  const contactEmail = patientInfo?.email;
+                  const derivedStatus = getDerivedStatus(appointment);
+                  const isUnconfirmed = derivedStatus === "Unconfirmed";
+                  const isConfirmed = derivedStatus === "Confirmed";
+                  const isCompleted = derivedStatus === "Completed";
+                  const startTime = new Date(appointment.appointment_datetime).getTime();
+                  const isHistorical =
+                    isCompleted && !Number.isNaN(startTime) && startTime < Date.now();
+                  const canEdit = isUnconfirmed || isConfirmed;
+                  const canConfirm = isUnconfirmed;
+                  const canMarkCompleted = isConfirmed;
+                  const canCancel = isUnconfirmed || isConfirmed;
+                  return (
+                    <tr key={appointment.id} className="transition hover:bg-surface/80">
+                      <td className="px-4 py-3">
+                        <p className="text-sm font-semibold text-text">{patientName}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="text-sm font-medium text-text">{dateLabel}</p>
+                        <p className="text-xs text-text-subtle">{timeRange}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        {contactPhone || contactEmail ? (
+                          <div className="space-y-1 text-xs text-text-muted">
+                            {contactPhone && (
+                              <p className="text-sm font-medium text-text">{contactPhone}</p>
+                            )}
+                            {contactEmail && (
+                              <p className="text-xs text-text-subtle">{contactEmail}</p>
+                            )}
+                          </div>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
+                      <td className="px-4 py-3">{appointment.doctor_name}</td>
+                      <td className="px-4 py-3">{appointment.department || "—"}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[derivedStatus]}`}
+                          >
+                            {derivedStatus}
+                          </span>
+                          {isHistorical && (
+                            <span className="rounded-full border border-border/60 bg-surface/70 px-2.5 py-1 text-[11px] font-semibold text-text-subtle">
+                              Past visit
+                            </span>
                           )}
                         </div>
-                      ) : (
-                        "—"
-                      )}
-                    </td>
-                    <td className="px-4 py-3">{appointment.doctor_name}</td>
-                    <td className="px-4 py-3">{appointment.department || "—"}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyles[derivedStatus]}`}
-                        >
-                          {derivedStatus}
-                        </span>
-                        {isHistorical && (
-                          <span className="rounded-full border border-border/60 bg-surface/70 px-2.5 py-1 text-[11px] font-semibold text-text-subtle">
-                            Past visit
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap justify-end gap-2">
-                        <Button variant="ghost" size="sm" onClick={() => handleView(appointment)}>
-                          View
-                        </Button>
-                        {canEdit && (
-                          <Button variant="ghost" size="sm" onClick={() => handleEdit(appointment)}>
-                            Edit
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap justify-end gap-2">
+                          <Button variant="ghost" size="sm" onClick={() => handleView(appointment)}>
+                            View
                           </Button>
-                        )}
-                        {canConfirm && (
-                          <button
-                            type="button"
-                            onClick={() => handleConfirm(appointment)}
-                            disabled={updateAppointment.isPending}
-                            className="rounded-full border border-success/30 bg-success-soft/60 px-3 py-1 text-xs font-semibold text-success transition hover:border-success/40 hover:bg-success-soft/80 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/40 disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            Confirm
-                          </button>
-                        )}
-                        {canMarkCompleted && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleCompletePrompt(appointment)}
-                          >
-                            Mark Completed
-                          </Button>
-                        )}
-                        {canCancel && (
-                          <button
-                            type="button"
-                            onClick={() => handleCancelPrompt(appointment)}
-                            className="rounded-full border border-danger/30 bg-danger-soft/60 px-3 py-1 text-xs font-semibold text-danger transition hover:border-danger/40 hover:bg-danger-soft/80 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/40 disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            Cancel
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                          {canEdit && (
+                            <Button variant="ghost" size="sm" onClick={() => handleEdit(appointment)}>
+                              Edit
+                            </Button>
+                          )}
+                          {canConfirm && (
+                            <button
+                              type="button"
+                              onClick={() => handleConfirm(appointment)}
+                              disabled={updateAppointment.isPending}
+                              className="rounded-full border border-success/30 bg-success-soft/60 px-3 py-1 text-xs font-semibold text-success transition hover:border-success/40 hover:bg-success-soft/80 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-success/40 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              Confirm
+                            </button>
+                          )}
+                          {canMarkCompleted && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleCompletePrompt(appointment)}
+                            >
+                              Mark Completed
+                            </Button>
+                          )}
+                          {canCancel && (
+                            <button
+                              type="button"
+                              onClick={() => handleCancelPrompt(appointment)}
+                              className="rounded-full border border-danger/30 bg-danger-soft/60 px-3 py-1 text-xs font-semibold text-danger transition hover:border-danger/40 hover:bg-danger-soft/80 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger/40 disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              Cancel
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {!filteredAppointments.length && (
@@ -954,7 +1074,7 @@ const AppointmentListPage = () => {
               aria-labelledby="appointment-view-title"
               aria-describedby="appointment-view-desc"
               tabIndex={-1}
-              className="relative z-10 flex w-full max-w-3xl flex-col overflow-hidden rounded-[32px] border border-border/60 bg-surface/80 shadow-card max-h-[90vh] backdrop-blur-xl animate-modalIn"
+              className="relative z-10 flex w-full max-w-[95vw] flex-col overflow-hidden rounded-[32px] border border-border/60 bg-surface/80 shadow-card max-h-[90vh] backdrop-blur-xl animate-modalIn sm:max-w-3xl"
             >
               <div className="sticky top-0 z-10 flex flex-wrap items-start justify-between gap-3 border-b border-border/60 bg-surface/85 px-6 pb-4 pt-5 backdrop-blur">
                 <div>
@@ -1084,7 +1204,7 @@ const AppointmentListPage = () => {
               aria-labelledby="appointment-edit-title"
               aria-describedby="appointment-edit-desc"
               tabIndex={-1}
-              className="relative z-10 flex w-full max-w-3xl flex-col overflow-hidden rounded-[32px] border border-border/60 bg-surface/80 shadow-card max-h-[90vh] backdrop-blur-xl animate-modalIn"
+              className="relative z-10 flex w-full max-w-[95vw] flex-col overflow-hidden rounded-[32px] border border-border/60 bg-surface/80 shadow-card max-h-[90vh] backdrop-blur-xl animate-modalIn sm:max-w-3xl"
             >
               <div className="sticky top-0 z-10 flex flex-wrap items-start justify-between gap-3 border-b border-border/60 bg-surface/85 px-6 pb-4 pt-5 backdrop-blur">
                 <div>
@@ -1257,7 +1377,7 @@ const AppointmentListPage = () => {
               aria-labelledby="appointment-cancel-title"
               aria-describedby="appointment-cancel-desc"
               tabIndex={-1}
-              className="relative z-10 w-full max-w-md overflow-hidden rounded-[32px] border border-border/60 bg-surface/80 shadow-card backdrop-blur-xl animate-modalIn"
+              className="relative z-10 w-full max-w-[95vw] overflow-hidden rounded-[32px] border border-border/60 bg-surface/80 shadow-card backdrop-blur-xl animate-modalIn sm:max-w-md"
             >
               <div className="border-b border-border/60 px-6 pb-4 pt-5">
                 <h3 id="appointment-cancel-title" className="text-lg font-semibold text-text">
@@ -1310,7 +1430,7 @@ const AppointmentListPage = () => {
               aria-labelledby="appointment-complete-title"
               aria-describedby="appointment-complete-desc"
               tabIndex={-1}
-              className="relative z-10 w-full max-w-md overflow-hidden rounded-[32px] border border-border/60 bg-surface/80 shadow-card backdrop-blur-xl animate-modalIn"
+              className="relative z-10 w-full max-w-[95vw] overflow-hidden rounded-[32px] border border-border/60 bg-surface/80 shadow-card backdrop-blur-xl animate-modalIn sm:max-w-md"
             >
               <div className="border-b border-border/60 px-6 pb-4 pt-5">
                 <h3 id="appointment-complete-title" className="text-lg font-semibold text-text">

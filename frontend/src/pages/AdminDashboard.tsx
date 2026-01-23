@@ -15,7 +15,6 @@ import { createPortal } from "react-dom";
 import { AnalyticsCharts } from "../components/dashboard/AnalyticsCharts";
 import { DashboardEmptyState } from "../components/dashboard/DashboardEmptyState";
 import { KpiCard } from "../components/dashboard/KpiCard";
-import { WhatsNextPanel } from "../components/dashboard/WhatsNextPanel";
 import { ErrorState } from "../components/ErrorState";
 import { Button } from "../components/ui/Button";
 import { SectionHeader } from "../components/ui/SectionHeader";
@@ -39,6 +38,7 @@ const AdminDashboard = () => {
   const [resetting, setResetting] = useState(false);
   const [resetNotice, setResetNotice] = useState<string | null>(null);
   const [resetError, setResetError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
   const resetEnabled = import.meta.env.VITE_ENABLE_DEMO_RESET === "true";
   const infoRef = useRef<HTMLButtonElement | null>(null);
   const resetModalRef = useRef<HTMLDivElement | null>(null);
@@ -102,6 +102,13 @@ const AdminDashboard = () => {
       resetLastFocusRef.current?.focus();
     };
   }, [showResetModal]);
+
+  const handleRefresh = async () => {
+    const result = await refetch();
+    if (!result.error) {
+      setRefreshKey((prev) => prev + 1);
+    }
+  };
 
   const infoTooltip =
     showInfoTooltip && infoPosition
@@ -248,7 +255,9 @@ const AdminDashboard = () => {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => refetch()}
+                onClick={() => {
+                  void handleRefresh();
+                }}
                 disabled={isFetching}
               >
                 {isFetching ? (
@@ -366,7 +375,9 @@ const AdminDashboard = () => {
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => refetch()}
+              onClick={() => {
+                void handleRefresh();
+              }}
               disabled={isFetching}
             >
               <RefreshCcw className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
@@ -426,9 +437,7 @@ const AdminDashboard = () => {
 
       {isEmpty ? (
         <DashboardEmptyState
-          onSampleLoaded={async () => {
-            await refetch();
-          }}
+          onSampleLoaded={handleRefresh}
           onceKey={emptyOnceKey}
         />
       ) : (
@@ -436,10 +445,9 @@ const AdminDashboard = () => {
           appointmentsByDay={trends.appointmentsByDay30d}
           newPatientsByWeek={trends.newPatientsByWeek12w}
           appointmentsByStatus={breakdowns.appointmentsByStatus30d}
+          refreshKey={refreshKey}
         />
       )}
-
-      <WhatsNextPanel />
 
       {showResetModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
@@ -450,7 +458,7 @@ const AdminDashboard = () => {
             aria-labelledby="reset-demo-title"
             aria-describedby="reset-demo-desc"
             tabIndex={-1}
-            className="w-full max-w-lg rounded-[32px] border border-border/60 bg-surface/80 shadow-card backdrop-blur-xl"
+            className="w-full max-w-[95vw] rounded-[32px] border border-border/60 bg-surface/80 shadow-card backdrop-blur-xl sm:max-w-lg"
           >
             <div className="flex items-center justify-between border-b border-border/60 px-6 py-4">
               <div>
@@ -474,7 +482,7 @@ const AdminDashboard = () => {
                   onChange={(event) => setReseedAfterReset(event.target.checked)}
                   className="h-4 w-4 rounded border-border/60 bg-surface/70 text-primary focus:ring-primary"
                 />
-                Reseed sample data after reset
+                Reseed data after reset
               </label>
             </div>
             <div className="flex items-center justify-end gap-3 border-t border-border/60 px-6 py-4">
@@ -493,7 +501,7 @@ const AdminDashboard = () => {
                     await resetDemoData(reseedAfterReset);
                     setShowResetModal(false);
                     setResetNotice("Demo reset complete");
-                    await refetch();
+                    await handleRefresh();
                   } catch (error) {
                     setResetError("Unable to reset demo.");
                   } finally {

@@ -200,7 +200,7 @@ const PatientListPage = () => {
   };
 
   return (
-    <Card className="animate-fadeUp space-y-5">
+    <Card className="animate-fadeUp space-y-5 p-4 sm:p-6">
       <SectionHeader
         title="Patients"
         description="Review active patient profiles and contact details."
@@ -249,40 +249,86 @@ const PatientListPage = () => {
       )}
 
       {!!filteredPatients.length && (
-        <div className="overflow-x-auto rounded-2xl border border-border/60 bg-surface/60 shadow-sm backdrop-blur">
-          <table className="min-w-full text-left text-sm text-text-muted">
-            <thead className="bg-surface/75 text-xs uppercase tracking-wide text-text-subtle backdrop-blur">
-              <tr>
-                <th className="px-4 py-3 font-medium">Patient</th>
-                <th className="px-4 py-3 font-medium">Email</th>
-                <th className="px-4 py-3 font-medium">Phone</th>
-                <th className="px-4 py-3 font-medium">Date of Birth</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/40 bg-surface/60">
-              {filteredPatients.map((patient) => (
-                <tr
-                  key={patient.id}
-                  className="cursor-pointer transition hover:bg-surface/80"
-                  onClick={() => navigate(`/patients/${patient.id}`)}
-                >
-                  <td className="px-4 py-3">
-                    <Link
-                      to={`/patients/${patient.id}`}
-                      className="font-medium text-primary hover:text-primary-strong"
-                    >
-                      {patient.full_name}
-                    </Link>
-                    <p className="text-xs text-text-subtle">ID #{patient.id}</p>
-                  </td>
-                  <td className="px-4 py-3">{patient.email || "—"}</td>
-                  <td className="px-4 py-3">{patient.phone || "—"}</td>
-                  <td className="px-4 py-3">{patient.date_of_birth || "—"}</td>
+        <>
+          <div className="space-y-3 md:hidden">
+            {filteredPatients.map((patient) => (
+              <div
+                key={patient.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => navigate(`/patients/${patient.id}`)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    navigate(`/patients/${patient.id}`);
+                  }
+                }}
+              >
+                <Card className="cursor-pointer p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-base font-semibold text-text">{patient.full_name}</p>
+                      <p className="text-xs text-text-subtle">ID #{patient.id}</p>
+                    </div>
+                    <span className="rounded-full border border-border/60 bg-surface/70 px-3 py-1 text-xs font-semibold text-text-muted">
+                      View
+                    </span>
+                  </div>
+                  <div className="mt-3 grid gap-2 text-sm text-text-muted">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs uppercase tracking-wide text-text-subtle">
+                        Contact
+                      </span>
+                      <span>{patient.phone || "—"}</span>
+                      {patient.email && (
+                        <span className="text-xs text-text-subtle">{patient.email}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs uppercase tracking-wide text-text-subtle">
+                        Date of birth
+                      </span>
+                      <span>{patient.date_of_birth || "—"}</span>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            ))}
+          </div>
+          <div className="hidden overflow-x-auto rounded-2xl border border-border/60 bg-surface/60 shadow-sm backdrop-blur md:block">
+            <table className="min-w-full text-left text-sm text-text-muted">
+              <thead className="bg-surface/75 text-xs uppercase tracking-wide text-text-subtle backdrop-blur">
+                <tr>
+                  <th className="px-4 py-3 font-medium">Patient</th>
+                  <th className="px-4 py-3 font-medium">Email</th>
+                  <th className="px-4 py-3 font-medium">Phone</th>
+                  <th className="px-4 py-3 font-medium">Date of Birth</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-border/40 bg-surface/60">
+                {filteredPatients.map((patient) => (
+                  <tr
+                    key={patient.id}
+                    className="cursor-pointer transition hover:bg-surface/80"
+                    onClick={() => navigate(`/patients/${patient.id}`)}
+                  >
+                    <td className="px-4 py-3">
+                      <Link
+                        to={`/patients/${patient.id}`}
+                        className="font-medium text-primary hover:text-primary-strong"
+                      >
+                        {patient.full_name}
+                      </Link>
+                      <p className="text-xs text-text-subtle">ID #{patient.id}</p>
+                    </td>
+                    <td className="px-4 py-3">{patient.email || "—"}</td>
+                    <td className="px-4 py-3">{patient.phone || "—"}</td>
+                    <td className="px-4 py-3">{patient.date_of_birth || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       {isModalOpen &&
@@ -296,7 +342,7 @@ const PatientListPage = () => {
               aria-labelledby="new-patient-title"
               aria-describedby="new-patient-desc"
               tabIndex={-1}
-              className="relative z-10 flex w-full max-w-3xl flex-col overflow-hidden rounded-[32px] border border-border/60 bg-surface/80 shadow-card max-h-[90vh] backdrop-blur-xl animate-modalIn"
+              className="relative z-10 flex w-full max-w-[95vw] flex-col overflow-hidden rounded-[32px] border border-border/60 bg-surface/80 shadow-card max-h-[90vh] backdrop-blur-xl animate-modalIn sm:max-w-3xl"
             >
               <div className="sticky top-0 z-10 flex flex-wrap items-start justify-between gap-3 border-b border-border/60 bg-surface/85 px-6 pb-4 pt-5 backdrop-blur">
                 <div>

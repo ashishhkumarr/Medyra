@@ -11,13 +11,15 @@ interface LineChartD3Props {
   height?: number;
   ariaLabel: string;
   tooltipFormatter?: (point: LinePoint) => string;
+  animationKey?: number;
 }
 
 export const LineChartD3 = ({
   data,
   height = 220,
   ariaLabel,
-  tooltipFormatter
+  tooltipFormatter,
+  animationKey
 }: LineChartD3Props) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -263,7 +265,15 @@ export const LineChartD3 = ({
     return () => {
       svg.selectAll("*").remove();
     };
-  }, [data, height, width, prefersReducedMotion, gradientId, tooltipFormatter]);
+  }, [
+    data,
+    height,
+    width,
+    prefersReducedMotion,
+    gradientId,
+    tooltipFormatter,
+    animationKey
+  ]);
 
   return (
     <div ref={containerRef} className="relative">

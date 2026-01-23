@@ -221,7 +221,7 @@ const LandingPage = () => {
             <p className="mt-2 text-[11px] text-text-subtle">Stable in the last week</p>
           </div>
 
-          <div className="relative z-20 mt-8 grid w-full max-w-xl gap-4 sm:grid-cols-2 lg:hidden">
+          <div className="relative z-20 mx-auto mt-8 grid w-full max-w-xl gap-4 sm:grid-cols-2 lg:hidden">
             <div className="rounded-3xl border border-border/60 bg-surface/70 p-4 text-xs text-text-muted shadow-card backdrop-blur">
               <p className="text-[11px] uppercase tracking-wide text-text-subtle">Clinic rating</p>
               <p className="mt-1 text-2xl font-semibold text-text">9.6</p>
@@ -391,9 +391,9 @@ const LandingPage = () => {
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <Link to="/login" className="w-full">
+            <Link to="/signup" className="w-full">
               <Button size="lg" variant="secondary" className="w-full justify-center">
-                Staff login
+                Create an account
               </Button>
             </Link>
           </div>

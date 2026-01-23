@@ -66,7 +66,7 @@ const CreateAppointmentPage = () => {
   };
 
   return (
-    <Card className="animate-fadeUp">
+    <Card className="animate-fadeUp p-4 sm:p-6">
       <SectionHeader
         title="Create appointment"
         description="Schedule a new visit with timing, clinician, and notes."

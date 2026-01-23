@@ -1,5 +1,6 @@
 import { Github } from "lucide-react";
 
+import { WhatsNextPanel } from "../components/dashboard/WhatsNextPanel";
 import { Card } from "../components/ui/Card";
 import { SectionHeader } from "../components/ui/SectionHeader";
 import { usePageTitle } from "../hooks/usePageTitle";
@@ -8,8 +9,8 @@ const AboutPage = () => {
   usePageTitle("About Medyra");
 
   return (
-    <div className="w-full">
-      <Card className="space-y-8 p-6 sm:p-8 lg:p-10">
+    <div className="w-full space-y-8">
+      <Card className="space-y-8 p-6 sm:p-8 lg:p-10 hover:border-primary/30 hover:shadow-[0_28px_60px_rgba(34,211,191,0.16)]">
         <SectionHeader
           title="About Medyra"
           description="A demo-first Electronic Medical Record (EMR) system built to showcase full-stack engineering, UX, and product thinking."
@@ -102,6 +103,8 @@ const AboutPage = () => {
           This project was built as a portfolio demonstration and is continuously evolving.
         </p>
       </Card>
+
+      <WhatsNextPanel />
     </div>
   );
 };
