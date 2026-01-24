@@ -1,7 +1,14 @@
 backend/.venv/
 frontend/node_modules/
+node_modules/
 frontend/dist/
+dist/
 __pycache__/
 .pytest_cache/
 .DS_Store
-frontend/dist
+**/.DS_Store
+.env
+backend/.env
+frontend/.env
+!.env.example
+!.env.production
