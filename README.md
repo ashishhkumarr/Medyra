@@ -110,11 +110,11 @@ Backend:
 
 ## Screenshots
 
-- `screenshots/landing.png`
-- `screenshots/dashboard.png`
-- `screenshots/appointments.png`
-- `screenshots/patients.png`
-- `screenshots/audit-log.png`
+![Landing](screenshots/landing.png)
+![Dashboard](screenshots/dashboard.png)
+![Appointments](screenshots/appointments.png)
+![Patients](screenshots/patients.png)
+![Audit Log](screenshots/audit-log.png)
 
 ## Roadmap and What is Next
 
