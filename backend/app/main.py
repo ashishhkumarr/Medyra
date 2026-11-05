@@ -17,6 +17,7 @@ from app.api.v1 import (
     auth,
     dashboard,
     demo,
+    encounters,
     patients,
     reminders,
     users,
@@ -174,6 +175,7 @@ app.include_router(auth.router, prefix=settings.API_V1_STR)
 app.include_router(users.router, prefix=settings.API_V1_STR)
 app.include_router(patients.router, prefix=settings.API_V1_STR)
 app.include_router(appointments.router, prefix=settings.API_V1_STR)
+app.include_router(encounters.router, prefix=settings.API_V1_STR)
 app.include_router(reminders.router, prefix=settings.API_V1_STR)
 app.include_router(admin.router, prefix=settings.API_V1_STR)
 app.include_router(audit_logs.router, prefix=settings.API_V1_STR)
