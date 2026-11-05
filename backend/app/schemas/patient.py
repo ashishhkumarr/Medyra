@@ -42,6 +42,9 @@ class PatientNotesUpdate(BaseModel):
 class PatientResponse(PatientBase):
     id: int
     full_name: str
+    # Lenient on output: stored emails may include reserved domains (e.g. .local
+    # from sample data) that EmailStr rejects. Creation still validates via EmailStr.
+    email: str | None = None
     created_at: datetime
 
     class Config:
