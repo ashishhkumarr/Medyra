@@ -37,6 +37,33 @@ const initialFormState: PatientFormState = {
   notes: ""
 };
 
+const getInitials = (name: string) =>
+  name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("") || "?";
+
+const getAge = (dob?: string) => {
+  if (!dob) return null;
+  const birth = new Date(dob);
+  if (Number.isNaN(birth.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - birth.getFullYear();
+  const m = now.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age -= 1;
+  return age >= 0 && age < 150 ? age : null;
+};
+
+const patientCode = (id: number) => `P${String(10000 + id).padStart(5, "0")}`;
+
+const Avatar = ({ name }: { name: string }) => (
+  <span className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-primary-soft text-xs font-bold text-primary-strong">
+    {getInitials(name)}
+  </span>
+);
+
 const PatientListPage = () => {
   usePageTitle("Patients");
   const { data, isLoading, error } = usePatients();
@@ -265,9 +292,18 @@ const PatientListPage = () => {
               >
                 <Card className="cursor-pointer p-4">
                   <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-base font-semibold text-text">{patient.full_name}</p>
-                      <p className="text-xs text-text-subtle">ID #{patient.id}</p>
+                    <div className="flex items-center gap-3">
+                      <Avatar name={patient.full_name} />
+                      <div>
+                        <p className="text-base font-semibold text-text">{patient.full_name}</p>
+                        <p className="text-xs text-text-subtle">
+                          {patientCode(patient.id)}
+                          {getAge(patient.date_of_birth) !== null
+                            ? ` · ${getAge(patient.date_of_birth)} yrs`
+                            : ""}
+                          {patient.sex ? ` · ${patient.sex}` : ""}
+                        </p>
+                      </div>
                     </div>
                     <span className="rounded-full border border-border/60 bg-surface/70 px-3 py-1 text-xs font-semibold text-text-muted">
                       View
@@ -299,32 +335,44 @@ const PatientListPage = () => {
               <thead className="bg-surface/75 text-xs uppercase tracking-wide text-text-subtle backdrop-blur">
                 <tr>
                   <th className="px-4 py-3 font-medium">Patient</th>
+                  <th className="px-4 py-3 font-medium">Age</th>
+                  <th className="px-4 py-3 font-medium">Sex</th>
                   <th className="px-4 py-3 font-medium">Email</th>
                   <th className="px-4 py-3 font-medium">Phone</th>
                   <th className="px-4 py-3 font-medium">Date of Birth</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40 bg-surface/60">
-                {filteredPatients.map((patient) => (
+                {filteredPatients.map((patient) => {
+                  const age = getAge(patient.date_of_birth);
+                  return (
                   <tr
                     key={patient.id}
                     className="cursor-pointer transition hover:bg-surface/80"
                     onClick={() => navigate(`/patients/${patient.id}`)}
                   >
                     <td className="px-4 py-3">
-                      <Link
-                        to={`/patients/${patient.id}`}
-                        className="font-medium text-primary hover:text-primary-strong"
-                      >
-                        {patient.full_name}
-                      </Link>
-                      <p className="text-xs text-text-subtle">ID #{patient.id}</p>
+                      <div className="flex items-center gap-3">
+                        <Avatar name={patient.full_name} />
+                        <div>
+                          <Link
+                            to={`/patients/${patient.id}`}
+                            className="font-semibold text-text hover:text-primary"
+                          >
+                            {patient.full_name}
+                          </Link>
+                          <p className="text-xs text-text-subtle">{patientCode(patient.id)}</p>
+                        </div>
+                      </div>
                     </td>
+                    <td className="px-4 py-3">{age ?? "—"}</td>
+                    <td className="px-4 py-3">{patient.sex || "—"}</td>
                     <td className="px-4 py-3">{patient.email || "—"}</td>
                     <td className="px-4 py-3">{patient.phone || "—"}</td>
                     <td className="px-4 py-3">{patient.date_of_birth || "—"}</td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
