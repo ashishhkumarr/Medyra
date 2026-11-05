@@ -9,7 +9,7 @@ export const Card = ({ className, children, padded = true, ...props }: CardProps
   return (
     <div
       className={clsx(
-        "glass-card border border-border/60 backdrop-blur-xl hover:-translate-y-1 hover:shadow-[0_28px_60px_rgba(96,110,160,0.2)]",
+        "glass-card border border-border/60 transition-all duration-300 hover:-translate-y-1 hover:border-primary/25 hover:shadow-[0_24px_50px_-24px_rgba(13,110,104,0.3)]",
         padded && "p-6",
         className
       )}

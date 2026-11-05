@@ -32,7 +32,7 @@ export const KpiCard = ({ label, value, icon, hint, trendText, trendTone }: KpiC
       </div>
       <div>
         <p className="text-sm text-text-muted">{label}</p>
-        <p className="text-3xl font-semibold text-text">{value}</p>
+        <p className="font-display text-4xl text-text">{value}</p>
         {trendText && (
           <p className={`text-xs ${trendClass}`} aria-label={`${label} trend: ${trendText}`}>
             {trendText}

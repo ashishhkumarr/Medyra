@@ -164,15 +164,15 @@ const AdminDashboard = () => {
 
   const greetingBlock = (
     <div
-      className={`flex items-center gap-2 text-xl font-semibold tracking-tight text-text ${
+      className={`flex items-center gap-3 font-display text-3xl text-text sm:text-4xl ${
         animateGreeting ? "animate-fadeUp" : ""
       }`}
       style={animateGreeting ? { animationDelay: "90ms" } : undefined}
     >
-      <GreetingIcon className="h-5 w-5 text-text-muted" />
+      <GreetingIcon className="h-6 w-6 text-primary" />
       <span>{greetingLabel}</span>
       {greetingName ? (
-        <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+        <span className="text-primary">
           {` ${greetingName}`}
         </span>
       ) : null}

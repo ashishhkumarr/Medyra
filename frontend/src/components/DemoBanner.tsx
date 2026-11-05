@@ -60,7 +60,7 @@ export const DemoBanner = () => {
                 aria-label="Demo only. Do not enter real patient data."
                 className="flex items-center gap-2 rounded-full border border-border/60 bg-surface/70 px-3 py-1 text-xs font-semibold text-text-muted shadow-sm backdrop-blur transition hover:text-text"
               >
-                <span className="h-2 w-2 rounded-full bg-warning/70 shadow-[0_0_12px_rgba(245,182,79,0.4)]" />
+                <span className="h-2 w-2 rounded-full bg-warning/70 shadow-[0_0_12px_rgba(156,107,26,0.4)]" />
                 Demo Mode
               </button>
               {showTooltip &&

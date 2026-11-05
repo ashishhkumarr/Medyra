@@ -7,56 +7,58 @@
 
 :root {
   color-scheme: light;
-  --color-bg: 245 247 255;
-  --color-surface: 255 255 255;
-  --color-surface-subtle: 247 248 255;
-  --color-surface-muted: 234 238 250;
-  --color-text: 28 34 52;
-  --color-text-muted: 88 98 124;
-  --color-text-subtle: 131 142 170;
-  --color-border: 224 230 244;
-  --color-primary: 34 211 191;
-  --color-primary-strong: 16 176 164;
-  --color-primary-soft: 206 247 242;
-  --color-secondary: 168 154 255;
-  --color-secondary-soft: 230 226 255;
-  --color-success: 70 201 149;
-  --color-success-soft: 214 248 232;
-  --color-warning: 245 182 79;
-  --color-warning-soft: 255 240 212;
-  --color-danger: 244 105 122;
-  --color-danger-soft: 255 224 231;
-  --shadow-card: 0 25px 60px rgba(120, 140, 190, 0.18);
-  --glass-card: 255 255 255;
-  --glass-panel: 252 253 255;
+  /* Clinical Editorial — bone ground, deep teal-green ink, cyan + health-green */
+  --color-bg: 247 245 239;
+  --color-surface: 252 251 247;
+  --color-surface-subtle: 242 239 230;
+  --color-surface-muted: 233 228 212;
+  --color-text: 18 48 44;
+  --color-text-muted: 74 95 89;
+  --color-text-subtle: 107 122 115;
+  --color-border: 228 222 207;
+  --color-primary: 13 110 104;
+  --color-primary-strong: 10 87 82;
+  --color-primary-soft: 212 233 229;
+  --color-secondary: 14 143 168;
+  --color-secondary-soft: 214 236 242;
+  --color-success: 14 124 83;
+  --color-success-soft: 210 236 223;
+  --color-warning: 156 107 26;
+  --color-warning-soft: 243 231 207;
+  --color-danger: 185 60 60;
+  --color-danger-soft: 245 221 218;
+  --shadow-card: 0 2px 6px rgba(18, 48, 44, 0.06), 0 24px 50px -28px rgba(18, 48, 44, 0.3);
+  --glass-card: 252 251 247;
+  --glass-panel: 255 255 255;
   --glass-input: 255 255 255;
 }
 
 .dark {
   color-scheme: dark;
-  --color-bg: 10 14 28;
-  --color-surface: 16 22 38;
-  --color-surface-subtle: 20 28 46;
-  --color-surface-muted: 28 38 60;
-  --color-text: 236 240 251;
-  --color-text-muted: 170 182 206;
-  --color-text-subtle: 122 135 162;
-  --color-border: 40 52 80;
-  --color-primary: 72 227 214;
-  --color-primary-strong: 36 198 184;
-  --color-primary-soft: 14 54 66;
-  --color-secondary: 132 164 255;
-  --color-secondary-soft: 33 45 86;
-  --color-success: 104 231 181;
-  --color-success-soft: 20 60 48;
-  --color-warning: 255 201 116;
-  --color-warning-soft: 84 56 24;
-  --color-danger: 255 134 152;
-  --color-danger-soft: 84 31 41;
-  --shadow-card: 0 28px 70px rgba(6, 10, 28, 0.7);
-  --glass-card: 18 25 44;
-  --glass-panel: 20 28 48;
-  --glass-input: 21 30 50;
+  /* Clinical Editorial — deep teal night */
+  --color-bg: 10 23 20;
+  --color-surface: 17 34 30;
+  --color-surface-subtle: 14 28 25;
+  --color-surface-muted: 23 44 39;
+  --color-text: 234 240 237;
+  --color-text-muted: 165 190 183;
+  --color-text-subtle: 120 145 138;
+  --color-border: 33 54 48;
+  --color-primary: 45 212 191;
+  --color-primary-strong: 94 234 212;
+  --color-primary-soft: 16 54 48;
+  --color-secondary: 94 200 220;
+  --color-secondary-soft: 18 50 56;
+  --color-success: 52 211 153;
+  --color-success-soft: 16 54 40;
+  --color-warning: 224 180 74;
+  --color-warning-soft: 64 48 20;
+  --color-danger: 240 120 120;
+  --color-danger-soft: 70 30 30;
+  --shadow-card: 0 2px 6px rgba(0, 0, 0, 0.4), 0 24px 50px -28px rgba(0, 0, 0, 0.7);
+  --glass-card: 17 34 30;
+  --glass-panel: 20 40 35;
+  --glass-input: 18 36 32;
 }
 
 html {
@@ -66,13 +68,19 @@ html {
 body {
   background-color: rgb(var(--color-bg));
   color: rgb(var(--color-text));
-  font-family: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  font-size: 18px;
-  line-height: 1.65;
+  font-size: 16px;
+  line-height: 1.6;
   min-height: 100vh;
   overflow-x: hidden;
+}
+
+.font-display {
+  font-family: "Calistoga", ui-serif, Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.015em;
 }
 
 #root {
@@ -83,35 +91,31 @@ body {
   position: relative;
   min-height: 100vh;
   padding-bottom: env(safe-area-inset-bottom);
-  background: radial-gradient(circle at 20% 10%, rgba(208, 225, 255, 0.7), transparent 40%),
-    radial-gradient(circle at 80% 0%, rgba(255, 213, 236, 0.7), transparent 45%),
-    radial-gradient(circle at 35% 35%, rgba(210, 255, 246, 0.6), transparent 50%),
-    radial-gradient(circle at 85% 65%, rgba(234, 225, 255, 0.55), transparent 45%),
-    linear-gradient(135deg, rgba(248, 249, 255, 0.95), rgba(255, 246, 252, 0.9));
+  background: radial-gradient(60% 45% at 88% 0%, rgba(14, 143, 168, 0.07), transparent 60%),
+    radial-gradient(55% 40% at 0% 6%, rgba(13, 110, 104, 0.06), transparent 60%),
+    rgb(var(--color-bg));
   overflow: hidden;
 }
 
 .dark .app-shell {
-  background: radial-gradient(circle at 15% 8%, rgba(94, 116, 255, 0.25), transparent 42%),
-    radial-gradient(circle at 80% 6%, rgba(148, 108, 255, 0.28), transparent 40%),
-    radial-gradient(circle at 30% 40%, rgba(44, 208, 199, 0.22), transparent 45%),
-    radial-gradient(circle at 82% 70%, rgba(255, 122, 186, 0.18), transparent 45%),
-    linear-gradient(135deg, rgba(8, 12, 26, 0.98), rgba(18, 24, 44, 0.96));
+  background: radial-gradient(60% 45% at 88% 0%, rgba(45, 212, 191, 0.1), transparent 60%),
+    radial-gradient(55% 40% at 0% 6%, rgba(14, 143, 168, 0.1), transparent 60%),
+    rgb(var(--color-bg));
 }
 
 .app-shell::before {
   content: "";
   position: absolute;
   inset: 0;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.6) 1px, transparent 1px);
-  background-size: 120px 120px;
-  opacity: 0.25;
+  background-image: radial-gradient(rgba(18, 48, 44, 0.05) 1px, transparent 1px);
+  background-size: 140px 140px;
+  opacity: 0.4;
   pointer-events: none;
 }
 
 .dark .app-shell::before {
-  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
-  opacity: 0.18;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  opacity: 0.25;
 }
 
 .ambient-orb {
@@ -136,9 +140,9 @@ body {
 }
 
 .glass-card {
-  background-color: rgb(var(--glass-card) / 0.72);
-  border-color: rgb(var(--color-border) / 0.55);
-  @apply rounded-[28px] border shadow-card backdrop-blur-xl transition-all duration-300;
+  background-color: rgb(var(--glass-card) / 0.95);
+  border-color: rgb(var(--color-border) / 0.9);
+  @apply rounded-3xl border shadow-card transition-all duration-300;
 }
 
 .section-heading {
@@ -146,9 +150,9 @@ body {
 }
 
 .glass-panel {
-  background-color: rgb(var(--glass-panel) / 0.68);
-  border-color: rgb(var(--color-border) / 0.5);
-  @apply rounded-[26px] border shadow-card backdrop-blur-xl;
+  background-color: rgb(var(--glass-panel) / 0.92);
+  border-color: rgb(var(--color-border) / 0.8);
+  @apply rounded-3xl border shadow-card;
 }
 
 .glass-input {

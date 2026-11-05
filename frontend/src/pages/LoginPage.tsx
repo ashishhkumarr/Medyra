@@ -41,8 +41,8 @@ const LoginPage = () => {
       <div className="pointer-events-none absolute bottom-10 left-10 h-28 w-28 rounded-full bg-gradient-to-br from-danger-soft/60 to-surface/60 blur-2xl" />
       <div className="relative z-10 mx-auto grid w-full max-w-[460px] gap-10 rounded-[36px] border border-border/60 bg-surface/70 p-6 shadow-card backdrop-blur-xl sm:max-w-6xl sm:p-10 lg:p-12 xl:grid-cols-2">
         <div className="rounded-3xl border border-border/60 bg-surface/70 p-8 shadow-card backdrop-blur animate-fadeUp">
-          <p className="text-sm font-medium uppercase tracking-wide text-primary">Clinic Portal</p>
-          <h1 className="mt-3 text-3xl font-semibold text-text">Medyra Admin Portal</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Clinic Portal</p>
+          <h1 className="mt-3 font-display text-4xl text-text">Medyra Admin Portal</h1>
           <p className="mt-3 text-base text-text-muted">
             Only clinic staff can access orchestration tools for patient journeys, schedules, and communications.
           </p>
@@ -67,7 +67,7 @@ const LoginPage = () => {
               <div className="flex justify-center">
                 <BrandLogo className="h-14 w-14 opacity-95" />
               </div>
-              <h2 className="text-2xl font-semibold text-text">Welcome Back</h2>
+              <h2 className="font-display text-3xl text-text">Welcome Back</h2>
               <p className="text-sm text-text-muted">Sign in with your clinic credentials.</p>
             </div>
             <InputField

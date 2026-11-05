@@ -12,7 +12,7 @@ const DemoNoticePage = () => {
         <p className="text-xs font-semibold uppercase tracking-wide text-warning">
           Demo Notice
         </p>
-        <h1 className="mt-2 text-3xl font-semibold text-text">
+        <h1 className="mt-2 font-display text-4xl text-text">
           This environment is for demonstration only.
         </h1>
         <p className="mt-3 text-sm text-text-muted">

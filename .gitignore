@@ -12,3 +12,7 @@ backend/.env
 frontend/.env
 !.env.example
 !.env.production
+
+# local dev overrides (points dev server at a remote backend)
+frontend/.env.local
+.env.local

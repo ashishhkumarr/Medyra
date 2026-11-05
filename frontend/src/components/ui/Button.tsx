@@ -15,13 +15,13 @@ const baseStyles =
 
 const variantStyles: Record<Variant, string> = {
   primary:
-    "bg-gradient-to-r from-primary to-secondary text-white shadow-[0_14px_36px_rgba(102,128,255,0.28)] hover:shadow-[0_18px_40px_rgba(42,203,184,0.32)] focus-visible:ring-primary/40",
+    "bg-primary text-white shadow-[0_10px_24px_-12px_rgba(13,110,104,0.8)] hover:bg-primary-strong hover:shadow-[0_16px_30px_-12px_rgba(13,110,104,0.7)] focus-visible:ring-primary/40",
   secondary:
     "border border-border/60 bg-surface/70 text-text shadow-sm backdrop-blur hover:border-primary/30 hover:bg-surface/90 focus-visible:ring-primary/30",
   ghost:
     "text-text-muted hover:text-text hover:bg-surface/60 focus-visible:ring-primary/20",
   destructive:
-    "bg-gradient-to-r from-danger to-warning text-white shadow-[0_14px_36px_rgba(244,105,122,0.25)] hover:shadow-[0_18px_40px_rgba(244,105,122,0.3)] focus-visible:ring-danger/40"
+    "bg-danger text-white shadow-[0_10px_24px_-12px_rgba(185,60,60,0.75)] hover:brightness-95 focus-visible:ring-danger/40"
 };
 
 const sizeStyles: Record<Size, string> = {

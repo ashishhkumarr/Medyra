@@ -256,7 +256,7 @@ const SignupPage = () => {
               <BrandLogo className="h-14 w-14 opacity-95" />
             </div>
             <p className="text-sm font-medium uppercase tracking-wide text-primary">Clinic onboarding</p>
-            <h1 className="mt-1 text-3xl font-semibold text-text">Create your Medyra account</h1>
+            <h1 className="mt-1 font-display text-4xl text-text">Create your Medyra account</h1>
             <p className="text-sm text-text-muted">
               Doctors and clinic admins can self-serve access. Patients never sign in.
             </p>
