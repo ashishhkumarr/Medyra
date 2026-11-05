@@ -1,7 +1,6 @@
 import {
   Calendar,
   CalendarPlus,
-  ClipboardList,
   Home,
   Info,
   LogOut,
@@ -50,11 +49,6 @@ export const Navbar = () => {
         to: "/appointments/create",
         label: "New Appointment",
         icon: <CalendarPlus className={iconClass} />
-      },
-      {
-        to: "/audit-logs",
-        label: "Audit Log",
-        icon: <ClipboardList className={iconClass} />
       }
     ],
     []

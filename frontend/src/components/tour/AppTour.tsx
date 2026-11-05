@@ -80,11 +80,6 @@ const AppTour = () => {
         content: "Schedule a new appointment in seconds."
       },
       {
-        target: '[data-tour="nav-audit"]',
-        title: "Audit log",
-        content: "See who did what and when (portfolio-grade)."
-      },
-      {
         target: '[data-tour="nav-profile"]',
         title: "Profile",
         content: "Update your profile and preferences here."

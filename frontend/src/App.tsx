@@ -9,7 +9,6 @@ import { PageShell } from "./components/ui/PageShell";
 import { IS_DEMO } from "./config/demo";
 import { useAuth } from "./hooks/useAuth";
 import AdminDashboard from "./pages/AdminDashboard";
-import AuditLogPage from "./pages/AuditLogPage";
 import AppointmentListPage from "./pages/AppointmentListPage";
 import AboutPage from "./pages/AboutPage";
 import CreateAppointmentPage from "./pages/CreateAppointmentPage";
@@ -77,14 +76,6 @@ const App = () => {
             element={
               <ProtectedRoute roles={["admin"]}>
                 <AdminDashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/audit-logs"
-            element={
-              <ProtectedRoute roles={["admin"]}>
-                <AuditLogPage />
               </ProtectedRoute>
             }
           />

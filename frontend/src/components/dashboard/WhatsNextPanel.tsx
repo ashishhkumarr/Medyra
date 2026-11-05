@@ -23,7 +23,6 @@ const sections: Array<{
       { label: "HIPAA-compliant data handling", badge: "Planned" },
       { label: "Encrypted PHI at rest and in transit", badge: "Planned" },
       { label: "Role-based access control (RBAC)", badge: "Research" },
-      { label: "Audit log retention & export", badge: "Planned" },
       { label: "Session timeout & device tracking", badge: "Enterprise" }
     ]
   },
