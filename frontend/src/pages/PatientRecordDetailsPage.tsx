@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
+import { EncounterSection } from "../components/clinical/EncounterSection";
 import { ErrorState } from "../components/ErrorState";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
@@ -99,7 +100,7 @@ const PatientDetailPage = () => {
     error: appointmentsError
   } = usePatientAppointments(patientId);
   const updateNotes = useUpdatePatientNotes();
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const [notes, setNotes] = useState("");
   const [notesSaved, setNotesSaved] = useState(false);
   const [notesError, setNotesError] = useState<string | null>(null);
@@ -250,6 +251,8 @@ const PatientDetailPage = () => {
           </div>
         </div>
       </Card>
+
+      <EncounterSection patientId={patientId} defaultProvider={user?.full_name ?? ""} />
 
       <Card className="space-y-4">
         <SectionHeader
