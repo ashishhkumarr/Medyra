@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { DemoBanner } from "./components/DemoBanner";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Navbar } from "./components/Navbar";
+import { Sidebar } from "./components/layout/Sidebar";
 import AppTour from "./components/tour/AppTour";
 import { PageShell } from "./components/ui/PageShell";
 import { IS_DEMO } from "./config/demo";
@@ -46,7 +47,6 @@ const App = () => {
   return (
     <PageShell>
       {showDemoBanner && <DemoBanner />}
-      <Navbar />
       <Toaster
         position="top-right"
         closeButton={false}
@@ -57,7 +57,16 @@ const App = () => {
         }}
       />
       <AppTour />
-      <main className="mx-auto w-full max-w-[1400px] px-4 py-10 sm:px-6 lg:px-10">
+      <div className={user ? "lg:flex" : undefined}>
+        {user ? <Sidebar /> : <Navbar />}
+        <main
+          className={
+            user
+              ? "min-w-0 flex-1 px-4 py-8 sm:px-6 lg:px-10"
+              : "mx-auto w-full max-w-[1400px] px-4 py-10 sm:px-6 lg:px-10"
+          }
+        >
+          <div className={user ? "mx-auto w-full max-w-[1400px]" : undefined}>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
@@ -129,7 +138,9 @@ const App = () => {
           />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
-      </main>
+          </div>
+        </main>
+      </div>
     </PageShell>
   );
 };
