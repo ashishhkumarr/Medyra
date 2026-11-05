@@ -37,6 +37,13 @@ const App = () => {
       ["/login", "/signup", "/demo-notice"].some((path) =>
         location.pathname.startsWith(path)
       ));
+
+  // The marketing landing renders full-bleed (its own nav + theme), outside the app shell.
+  if (location.pathname === "/" && !user) {
+    if (!hydrated) return null;
+    return <LandingPage />;
+  }
+
   return (
     <PageShell>
       {showDemoBanner && <DemoBanner />}
