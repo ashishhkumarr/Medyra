@@ -15,6 +15,7 @@ import { createPortal } from "react-dom";
 import { AnalyticsCharts } from "../components/dashboard/AnalyticsCharts";
 import { DashboardEmptyState } from "../components/dashboard/DashboardEmptyState";
 import { KpiCard } from "../components/dashboard/KpiCard";
+import { RecentEncountersPanel } from "../components/dashboard/RecentEncountersPanel";
 import { ErrorState } from "../components/ErrorState";
 import { Button } from "../components/ui/Button";
 import { SectionHeader } from "../components/ui/SectionHeader";
@@ -448,6 +449,8 @@ const AdminDashboard = () => {
           refreshKey={refreshKey}
         />
       )}
+
+      {!isEmpty && <RecentEncountersPanel />}
 
       {showResetModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
