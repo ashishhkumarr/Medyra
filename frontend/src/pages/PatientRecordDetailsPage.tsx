@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import { EncounterSection } from "../components/clinical/EncounterSection";
+import { VitalsCard } from "../components/clinical/VitalsCard";
 import { ErrorState } from "../components/ErrorState";
 import { Button } from "../components/ui/Button";
 import { Card } from "../components/ui/Card";
@@ -251,6 +252,8 @@ const PatientDetailPage = () => {
           </div>
         </div>
       </Card>
+
+      <VitalsCard patientId={patientId} />
 
       <EncounterSection patientId={patientId} defaultProvider={user?.full_name ?? ""} />
 
