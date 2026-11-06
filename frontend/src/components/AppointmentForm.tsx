@@ -6,6 +6,30 @@ import { InputField, TextAreaField } from "./ui/FormField";
 import { MicroHint } from "./ui/MicroHint";
 import { Patient } from "../services/patients";
 
+/**
+ * Build a disambiguating label for a patient option. Two patients can share a
+ * name, so we append demographics (DOB, then a contact detail) and always end
+ * with a short record ID so the option is guaranteed unique and selectable.
+ */
+const patientOptionLabel = (patient: Patient): string => {
+  const parts: string[] = [];
+  if (patient.date_of_birth) {
+    const dob = new Date(patient.date_of_birth);
+    const formatted = Number.isNaN(dob.getTime())
+      ? patient.date_of_birth
+      : new Intl.DateTimeFormat(undefined, {
+          year: "numeric",
+          month: "short",
+          day: "numeric"
+        }).format(dob);
+    parts.push(`DOB ${formatted}`);
+  }
+  const contact = patient.phone || patient.email;
+  if (contact) parts.push(contact);
+  parts.push(`#${String(patient.id).padStart(4, "0")}`);
+  return `${patient.full_name} — ${parts.join(" · ")}`;
+};
+
 interface Props {
   patients: Patient[];
   onSubmit: (values: {
@@ -120,7 +144,7 @@ export const AppointmentForm = ({ patients, onSubmit, isSubmitting }: Props) => 
           >
             {filteredPatients.map((patient) => (
               <option key={patient.id} value={patient.id}>
-                {patient.full_name}
+                {patientOptionLabel(patient)}
               </option>
             ))}
           </select>
