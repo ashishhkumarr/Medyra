@@ -3,30 +3,23 @@ import { Link } from "react-router-dom";
 import {
   AnimatePresence,
   MotionConfig,
-  animate,
   motion,
-  useInView,
-  useMotionTemplate,
-  useMotionValue,
   useReducedMotion
 } from "framer-motion";
 import {
-  Activity,
-  ArrowRight,
   BellRing,
   CalendarDays,
   Check,
-  CheckCircle2,
-  Clock,
-  Compass,
-  FileCheck2,
-  FileText,
-  Lock,
+  ClipboardList,
+  Facebook,
+  HeartPulse,
+  Instagram,
+  Linkedin,
   Plus,
-  ShieldCheck,
-  TrendingUp,
-  UserPlus,
-  Users
+  Star,
+  Stethoscope,
+  Twitter,
+  X
 } from "lucide-react";
 
 import "../styles/landing.css";
@@ -34,189 +27,169 @@ import "../styles/landing.css";
 const DEMO_URL = "/signup";
 const LOGIN_URL = "/login";
 
-/* ---------- motion helpers ---------- */
+/* ---------------- motion ---------------- */
 const reveal = (delay = 0) => ({
-  initial: { opacity: 0, y: 20 },
+  initial: { opacity: 0, y: 22 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, amount: 0.2 },
   transition: { duration: 0.7, ease: [0.2, 0.7, 0.3, 1] as const, delay }
 });
 
-function CountUp({ to, prefix = "", suffix = "" }: { to: number; prefix?: string; suffix?: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, amount: 0.6 });
-  const reduce = useReducedMotion();
-  const [val, setVal] = useState(0);
-  useEffect(() => {
-    if (!inView) return;
-    if (reduce) {
-      setVal(to);
-      return;
-    }
-    const controls = animate(0, to, {
-      duration: 1.2,
-      ease: [0.22, 1, 0.3, 1],
-      onUpdate: (v) => setVal(Math.round(v))
-    });
-    return () => controls.stop();
-  }, [inView, to, reduce]);
-  return (
-    <span ref={ref}>
-      {prefix}
-      {val}
-      {suffix}
-    </span>
-  );
-}
-
-function GrowBar({ h, alt = false }: { h: number; alt?: boolean }) {
-  return (
-    <motion.div
-      className={`ml-bar${alt ? " alt" : ""}`}
-      style={{ height: `${h}%`, transformOrigin: "bottom" }}
-      initial={{ scaleY: 0 }}
-      whileInView={{ scaleY: 1 }}
-      viewport={{ once: true, amount: 0.4 }}
-      transition={{ duration: 0.9, ease: [0.2, 0.7, 0.3, 1] }}
-    />
-  );
-}
-
-type Faq = { q: string; a: string };
-function FaqItem({ item, open, onToggle }: { item: Faq; open: boolean; onToggle: () => void }) {
-  return (
-    <div className={`ml-q${open ? " open" : ""}`}>
-      <button onClick={onToggle} aria-expanded={open}>
-        {item.q}
-        <span className="ml-ic">
-          <Plus size={18} />
-        </span>
-      </button>
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            className="ml-ans"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: [0.2, 0.7, 0.3, 1] }}
-            style={{ overflow: "hidden" }}
-          >
-            <p>{item.a}</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-/* ---------- content ---------- */
-const chartBars = [
-  { h: 46 }, { h: 62, alt: true }, { h: 54 }, { h: 78, alt: true }, { h: 66 }, { h: 90, alt: true }
-];
-const diveBars = [
-  { h: 40 }, { h: 58, alt: true }, { h: 48 }, { h: 72, alt: true }, { h: 60 }, { h: 86, alt: true }
-];
-
-const securityItems = [
-  { icon: Lock, title: "JWT auth & bcrypt", text: "Token-based sessions and hashed passwords, with login lockout after repeated failed attempts." },
-  { icon: ShieldCheck, title: "Tenant isolation", text: "Each clinic's data is walled off at the data layer and verified by an automated test suite." },
-  { icon: Clock, title: "Rate limiting & headers", text: "Request throttling and a hardened security-header middleware guard the API by default." },
-  { icon: FileText, title: "Full audit logging", text: "Key actions are recorded with a request ID, so every change is traceable after the fact." },
-  { icon: CheckCircle2, title: "Demo guardrails", text: "Feature flags keep reminders simulated and real-data entry discouraged — safe to show anyone." },
-  { icon: Check, title: "75+ tests, 11 migrations", text: "A real test suite and versioned schema migrations — not a weekend prototype held together with tape." }
-];
-
-const techStack = [
-  { c: "#61DAFB", n: "React + TypeScript" },
-  { c: "#646CFF", n: "Vite" },
-  { c: "#06B6D4", n: "Tailwind CSS" },
-  { c: "#F59E0B", n: "D3.js" },
-  { c: "#009688", n: "FastAPI" },
-  { c: "#D71F00", n: "SQLAlchemy" },
-  { c: "#336791", n: "PostgreSQL" },
-  { c: "#2496ED", n: "Docker" },
-  { c: "#111111", n: "Vercel" },
-  { c: "#4285F4", n: "Google Cloud Run" },
-  { c: "#3ECF8E", n: "Supabase" }
-];
-
-const faqs: Faq[] = [
-  { q: "Is Medyra really free?", a: "Yes. Medyra is a free, demo-first project made so anyone — especially small clinics still on paper — can try a modern EMR without cost or commitment." },
-  { q: "Can I enter real patient data?", a: "Please don't. Medyra runs in demo mode and is not intended for protected health information. Reminders are simulated and never leave the app, so it's safe to explore with sample data." },
-  { q: "Who is it for?", a: "Small clinics and solo practitioners who want to see what a lightweight digital record feels like — and anyone evaluating the engineering behind a full-stack EMR." },
-  { q: "What is it built with?", a: "A React + TypeScript frontend on Vercel, a FastAPI backend on Google Cloud Run, and a PostgreSQL database on Supabase — containerized with Docker and covered by an automated test suite." },
-  { q: "Who built Medyra?", a: "A single full-stack engineer who worked with clinical EMR systems at a heart clinic in Las Vegas, then built Medyra after seeing how many small clinics still rely entirely on paper." }
-];
-
-const BrandGlyph = () => (
-  <span className="ml-glyph" aria-hidden>
+/* ---------------- brand mark ---------------- */
+const Glyph = ({ className = "ml-glyph" }: { className?: string }) => (
+  <span className={className} aria-hidden>
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <path d="M12 21s-7-4.3-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.7-7 10-7 10Z" fill="#fff" opacity=".92" />
-      <path d="M6.5 12.5h3l1.3-2.5 1.8 4 1.2-2h3.2" stroke="#0D6E68" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 21s-7-4.3-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.7-7 10-7 10Z" fill="#9FBF60" opacity=".95" />
+      <path d="M6.5 12.5h3l1.3-2.5 1.8 4 1.2-2h3.2" stroke="#2E3A26" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   </span>
 );
 
-/* ---------- page ---------- */
+/* ---------------- data ---------------- */
+const CLINICS = ["Riverside Family Health", "Lakeview Pediatrics", "Summit Care Clinic", "Northgate Medical"];
+
+const TESTIMONIALS = [
+  { q: "We went from three paper binders to one screen. Intake that used to take ten minutes now takes two.", n: "Dr. Nadia Fernandes", r: "Family medicine · Riverside Health" },
+  { q: "The chart finally matches how I actually see patients — notes, vitals, and history all in one place.", n: "Dr. Arjun Rao", r: "Internal medicine" },
+  { q: "Setup took an afternoon, not a quarter. My front desk picked it up the same day with no training.", n: "Priya Nair", r: "Practice manager · Summit Care" },
+  { q: "Signing a note and knowing it's locked and traceable afterward gives me real peace of mind.", n: "Dr. Helena Costa", r: "General practice" },
+  { q: "The vitals trends are the thing I didn't know I needed — I can spot a BP creeping up at a glance.", n: "Dr. Samuel Boateng", r: "Cardiology" },
+  { q: "It's the first clinic software I've used that didn't come with a training manual.", n: "Leah Mwangi", r: "Nurse practitioner" },
+  { q: "Free, clean, and it just works. For a small practice, that's genuinely everything.", n: "Dr. Tomás Herrera", r: "Pediatrics" }
+];
+
+const FAQS = [
+  { q: "Is Medyra really free?", a: "Yes. Medyra is a free, demo-first electronic medical record built so any small clinic — especially ones still on paper — can try a modern chart without cost or a sales call." },
+  { q: "Can I enter real patient data?", a: "Please don't. Medyra runs in demo mode and isn't intended for protected health information. Reminders are simulated and never leave the app, so it's safe to explore with synthetic data." },
+  { q: "Who is Medyra for?", a: "Small clinics and solo practitioners who want to see what a lightweight digital record feels like — and anyone evaluating the engineering behind a full-stack EMR." },
+  { q: "What is Medyra built with?", a: "A React + TypeScript front end on Vercel, a FastAPI back end on Google Cloud Run, and a PostgreSQL database on Supabase — containerized with Docker and covered by an automated test suite." },
+  { q: "How do I get started?", a: "Create a clinic login, load the sample data, and you're exploring patients, scheduling, and clinical notes in under a minute. Nothing to install." }
+];
+
+type Story = {
+  cat: string;
+  title: string;
+  excerpt: string;
+  date: string;
+  author: string;
+  read: string;
+  variant: "photo" | "invoice" | "nodes";
+  body: { h?: string; p?: string; list?: string[] }[];
+};
+
+const STORIES: Story[] = [
+  {
+    cat: "Practice management",
+    title: "Going paperless: a small clinic's first week",
+    excerpt: "A practical, day-by-day look at moving a two-provider practice off paper charts — without losing a single afternoon to setup.",
+    date: "Nov 2, 2026",
+    author: "Medyra Team",
+    read: "4 min read",
+    variant: "nodes",
+    body: [
+      { p: "Most small clinics don't avoid going digital because they're attached to paper — they avoid it because every migration they've seen took a quarter and a consultant. It doesn't have to. Here's how a two-provider family practice made the switch in a week, an hour at a time." },
+      { h: "Day 1 — Stand up the clinic", p: "Create your clinic login and load the sample data so the front desk can click around a populated chart before any real information goes in. Nothing is installed; it runs in the browser. The goal of day one isn't to move data — it's to let everyone see where things live." },
+      { h: "Day 2–3 — Bring patients across", p: "Add your active roster first, not your whole history. A patient who's coming in this week matters more than one who hasn't visited in three years. Demographics, a phone number, and a short note are enough to start; the chart fills itself in as you see people." },
+      { h: "Day 4–5 — Chart one real visit", p: "The moment it clicks is the first visit you document live: vitals at intake, a SOAP note during the exam, a signature at the end. After that, the paper binder stops being the source of truth and the screen takes over — usually without anyone deciding it formally." },
+      { h: "The quiet win", p: "By the end of the week, the thing that changes isn't speed — it's that information stops living in someone's handwriting in a drawer. Anyone on the team can find a patient's last BP in two clicks, and that's the difference paper never gives you." }
+    ]
+  },
+  {
+    cat: "Clinical",
+    title: "Why the SOAP note still runs the exam room",
+    excerpt: "Subjective, Objective, Assessment, Plan has outlasted every documentation fad for a reason. A short defense of the format — and how to keep it fast.",
+    date: "Oct 24, 2026",
+    author: "Medyra Team",
+    read: "3 min read",
+    variant: "photo",
+    body: [
+      { p: "Documentation trends come and go, but open almost any chart in almost any clinic and you'll find the same four letters structuring the visit: S, O, A, P. It has survived because it mirrors how clinicians actually think." },
+      { h: "It separates story from signal", p: "Subjective is what the patient tells you; Objective is what you measure. Keeping them apart stops the two from blurring — a reported symptom never quietly becomes a recorded finding, and a vital sign never gets colored by a complaint." },
+      { h: "It forces a decision", p: "The Assessment is where a pile of observations becomes a clinical judgment, and the Plan turns that judgment into an action someone can follow next week. A note without those two sections is a transcript, not a record." },
+      { h: "Keeping it fast", p: "The format gets a bad reputation when the tooling makes it slow. The fix is a chart where vitals are captured once at intake and flow into the note, where the four fields are right there in front of you, and where signing locks the note so it becomes a real part of the history. Structure shouldn't cost you time — it should save it." }
+    ]
+  },
+  {
+    cat: "Analytics",
+    title: "Five numbers every small clinic should watch",
+    excerpt: "You don't need a dashboard with forty charts. You need five numbers that tell you whether this week is going well — and what to do if it isn't.",
+    date: "Oct 15, 2026",
+    author: "Medyra Team",
+    read: "3 min read",
+    variant: "invoice",
+    body: [
+      { p: "Analytics for a small practice shouldn't feel like running a hedge fund. Most of what matters fits on a single screen. These are the five numbers worth glancing at each morning." },
+      { list: [
+        "Visits today — the shape of the day, at a glance.",
+        "Confirmation rate — how many of today's appointments are actually confirmed.",
+        "Pending notes — visits you've seen but haven't finished charting.",
+        "New patients this month — whether the practice is growing or holding.",
+        "No-show rate — the quiet number that decides whether your schedule is honest."
+      ] },
+      { h: "Why these five", p: "Each one maps to an action. A low confirmation rate means send reminders. A stack of pending notes means block ten minutes before you leave. A rising no-show rate means your reminders aren't landing. The point of a number is the decision it changes — everything else is decoration." },
+      { h: "Watch the trend, not the day", p: "A single day tells you almost nothing; the direction over a few weeks tells you everything. A confirmation rate drifting down is worth more attention than one bad Tuesday. Good clinic analytics are less about precision and more about noticing, early, when something starts to move." }
+    ]
+  }
+];
+
+/* ---------------- small UI ---------------- */
+const Stars = () => (
+  <div className="ml-stars" aria-label="5 out of 5 stars">
+    {Array.from({ length: 5 }).map((_, i) => (
+      <Star key={i} size={14} fill="currentColor" strokeWidth={0} />
+    ))}
+  </div>
+);
+
+const initials = (name: string) =>
+  name.replace(/^Dr\.?\s+/, "").split(" ").filter(Boolean).slice(0, 2).map((p) => p[0]).join("").toUpperCase();
+
+/* ---------------- page ---------------- */
 const LandingPage = () => {
   const [scrolled, setScrolled] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [openStory, setOpenStory] = useState<Story | null>(null);
   const reduce = useReducedMotion();
 
-  // nav scroll state
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
+    const onScroll = () => setScrolled(window.scrollY > 10);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // hero mockup cursor parallax
-  const rx = useMotionValue(4);
-  const ry = useMotionValue(-9);
-  const transform = useMotionTemplate`rotateY(${ry}deg) rotateX(${rx}deg)`;
-  const onMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (reduce) return;
-    const r = e.currentTarget.getBoundingClientRect();
-    const dx = (e.clientX - r.left - r.width / 2) / r.width;
-    const dy = (e.clientY - r.top - r.height / 2) / r.height;
-    ry.set(-9 + dx * 6);
-    rx.set(4 - dy * 6);
-  };
-  const onLeave = () => {
-    animate(ry, -9, { duration: 0.5 });
-    animate(rx, 4, { duration: 0.5 });
-  };
-
-  const bob = (d: number) =>
-    reduce
-      ? {}
-      : { animate: { y: [0, -9, 0] }, transition: { duration: 6 + d, repeat: Infinity, ease: "easeInOut" as const, delay: d } };
+  useEffect(() => {
+    document.body.style.overflow = openStory ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [openStory]);
 
   return (
     <MotionConfig reducedMotion="user">
       <div className="ml-root">
+        {/* ANNOUNCEMENT */}
+        <div className="ml-announce">
+          Ready to see Medyra in action? Explore the free, open EHR demo —{" "}
+          <Link to={DEMO_URL}>start free today</Link>.
+        </div>
+
         {/* NAV */}
         <header className={`ml-nav${scrolled ? " scrolled" : ""}`}>
           <div className="ml-wrap ml-nav-inner">
             <Link to="/" className="ml-brand">
-              <BrandGlyph /> Medyra
+              <Glyph /> Medyra
             </Link>
             <nav className="ml-nav-links">
-              <a href="#features">Features</a>
-              <a href="#workflow">Workflow</a>
-              <a href="#security">Security</a>
-              <a href="#built">Built with</a>
+              <a href="#features">Product</a>
+              <a href="#care">Why Medyra</a>
+              <a href="#stories">Resources</a>
+              <a href="#testimonials">Customers</a>
               <a href="#faq">FAQ</a>
             </nav>
             <div className="ml-nav-cta">
-              <Link className="ml-btn ml-btn-ghost ml-btn-sm ml-hide-sm" to={LOGIN_URL}>
-                Log in
-              </Link>
-              <Link className="ml-btn ml-btn-primary ml-btn-sm" to={DEMO_URL}>
-                Start free <span className="ml-arrow">→</span>
-              </Link>
+              <Link className="ml-btn ml-btn-outline ml-btn-sm ml-hide-sm" to={LOGIN_URL}>Log in</Link>
+              <Link className="ml-btn ml-btn-primary ml-btn-sm" to={DEMO_URL}>Start free</Link>
             </div>
           </div>
         </header>
@@ -224,342 +197,330 @@ const LandingPage = () => {
         {/* HERO */}
         <section className="ml-hero">
           <div className="ml-wrap ml-hero-grid">
-            <div>
-              <motion.span className="ml-badge" {...reveal(0)}>
-                <span className="ml-dot" /> Demo mode · no real patient data
-              </motion.span>
-              <motion.h1 {...reveal(0.05)}>
-                The calm EMR for clinics that still run on <span className="ml-em">paper</span>.
-              </motion.h1>
-              <motion.p className="ml-sub" {...reveal(0.12)}>
-                Medyra is a lightweight, free electronic medical record system — patient records,
-                scheduling, and analytics in one clean workspace. Built for small practices, not
-                enterprise budgets.
-              </motion.p>
-              <motion.div className="ml-hero-cta" {...reveal(0.18)}>
-                <Link className="ml-btn ml-btn-primary" to={DEMO_URL}>
-                  Try the live demo <span className="ml-arrow">→</span>
-                </Link>
-                <a className="ml-btn ml-btn-ghost" href="#features">
-                  Explore features
-                </a>
-              </motion.div>
-              <motion.div className="ml-trust-line" {...reveal(0.24)}>
-                <span className="ml-tl"><Check size={15} /> Free &amp; open demo</span>
-                <span className="ml-tl"><Check size={15} /> No sign-up to look around</span>
-                <span className="ml-tl"><Check size={15} /> Built from real clinical EMR experience</span>
-              </motion.div>
-            </div>
+            <motion.div {...reveal(0)}>
+              <h1>One calm chart for the whole clinic</h1>
+              <p className="ml-sub">
+                From scheduling to clinical notes and vitals, Medyra keeps patients, visits,
+                and history together in one place — so you can focus on care, not software.
+              </p>
+              <div className="ml-hero-cta">
+                <Link className="ml-btn ml-btn-primary" to={DEMO_URL}>Start for free</Link>
+                <Link className="ml-btn ml-btn-outline" to={LOGIN_URL}>View the demo</Link>
+              </div>
+              <div className="ml-trust">
+                <p className="ml-tl">Built around the way small clinics actually work:</p>
+                <div className="ml-logos">
+                  {CLINICS.map((c) => (
+                    <span className="ml-logo" key={c}>
+                      <Stethoscope size={16} /> {c}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
 
-            <motion.div className="ml-mock-stage" onMouseMove={onMove} onMouseLeave={onLeave} {...reveal(0.15)}>
-              <motion.div className="ml-mock" style={{ transform }}>
-                <div className="ml-mock-top">
-                  <div className="ml-mt-l"><span className="ml-g" /> Medyra · Dashboard</div>
-                  <div className="ml-mock-dots"><span /><span /><span /></div>
+            <motion.div className="ml-hero-visual" {...reveal(0.12)}>
+              <div className="ml-dash">
+                <div className="ml-dash-top"><span className="ml-g" /> Medyra · Dashboard</div>
+                <div className="ml-dash-kpis">
+                  <div className="ml-dk"><div className="l">Patients</div><div className="v">248</div></div>
+                  <div className="ml-dk"><div className="l">Today</div><div className="v">12</div></div>
                 </div>
-                <div className="ml-kpi-row">
-                  <div className="ml-kpi"><div className="ml-l">Patients</div><div className="ml-v"><CountUp to={248} /></div></div>
-                  <div className="ml-kpi"><div className="ml-l">Today</div><div className="ml-v"><CountUp to={12} /></div></div>
-                  <div className="ml-kpi"><div className="ml-l">Confirmed</div><div className="ml-v"><CountUp to={9} /><small>75%</small></div></div>
-                </div>
-                <div className="ml-mock-chart">
-                  <div className="ml-mc-head"><span className="ml-t">Visit types</span><span className="ml-lg"><i /> This month</span></div>
+                <div className="ml-dash-chart">
+                  <div className="ch-head"><b>Visit types</b><span>This month</span></div>
                   <div className="ml-bars">
-                    {chartBars.map((b, i) => (
-                      <div className="ml-bar-col" key={i}>
-                        <GrowBar h={b.h} alt={b.alt} />
-                        <span className="ml-m">{["Mar", "Apr", "May", "Jun", "Jul", "Aug"][i]}</span>
+                    {[46, 62, 54, 78, 66, 90].map((h, i) => (
+                      <div className="bcol" key={i}>
+                        <div className={`bar${i % 2 ? " dim" : ""}`} style={{ height: `${h}%` }} />
+                        <span className="bm">{["Mar", "Apr", "May", "Jun", "Jul", "Aug"][i]}</span>
                       </div>
                     ))}
                   </div>
                 </div>
-                <div className="ml-mock-list">
-                  <div className="ml-li"><span className="ml-av">AN</span><div><div className="ml-nm">Asha Nair</div><div className="ml-tm">General check-up · 9:30</div></div><span className="ml-sp ok">Confirmed</span></div>
-                  <div className="ml-li"><span className="ml-av">RK</span><div><div className="ml-nm">Ravi Kumar</div><div className="ml-tm">Follow-up · 10:15</div></div><span className="ml-sp wait">Pending</span></div>
-                  <div className="ml-li"><span className="ml-av">MF</span><div><div className="ml-nm">Meera Fernandes</div><div className="ml-tm">Consultation · 11:00</div></div><span className="ml-sp ok">Confirmed</span></div>
-                </div>
-              </motion.div>
+              </div>
 
-              <motion.div className="ml-float-card ml-fc1" {...bob(0)}>
-                <span className="ml-fc-ic" style={{ background: "rgba(14,124,83,.14)", color: "var(--ml-green)" }}><UserPlus size={16} /></span>
-                <div><div className="ml-ft">New patient added</div><div className="ml-fs">Asha Nair · just now</div></div>
+              <motion.div className="ml-float ml-fc-patient" animate={reduce ? undefined : { y: [0, -8, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}>
+                <span className="av">AN</span>
+                <div><div className="nm">Asha Nair</div><div className="rl">Patient · new visit</div></div>
               </motion.div>
-              <motion.div className="ml-float-card ml-fc2" {...bob(0.6)}>
-                <span className="ml-fc-ic" style={{ background: "rgba(14,143,168,.14)", color: "var(--ml-cyan)" }}><BellRing size={16} /></span>
-                <div><div className="ml-ft">Reminder sent</div><div className="ml-fs">10:00 AM visit · demo</div></div>
+              <motion.div className="ml-float ml-fc-remind" animate={reduce ? undefined : { y: [0, -9, 0] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}>
+                <div className="rt"><BellRing size={14} /> Reminder</div>
+                <div className="rs">Appointment tomorrow at 10:00 AM.</div>
+                <div className="rb">Confirm</div>
               </motion.div>
-              <motion.div className="ml-float-card ml-fc3" {...bob(0.3)}>
-                <span className="ml-fc-ic" style={{ background: "rgba(13,110,104,.14)", color: "var(--ml-primary)" }}><TrendingUp size={16} /></span>
-                <div><div className="ml-ft">Analytics updated</div><div className="ml-fs">+18% visits vs last month</div></div>
+              <motion.div className="ml-float light ml-fc-ring" animate={reduce ? undefined : { y: [0, -7, 0] }} transition={{ duration: 6.5, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}>
+                <span className="ml-ring"><span>156</span></span>
+                <div>
+                  <div className="rv">Upcoming visits</div>
+                  <div className="rvs"><span className="dot" style={{ background: "var(--ml-gold)" }} />112 confirmed</div>
+                  <div className="rvs"><span className="dot" style={{ background: "var(--ml-ink-mute)" }} />44 unconfirmed</div>
+                </div>
               </motion.div>
             </motion.div>
           </div>
         </section>
 
-        {/* STATS */}
-        <div className="ml-stats">
-          <div className="ml-wrap ml-stats-grid">
-            <motion.div className="ml-stat" {...reveal(0)}><div className="ml-v"><CountUp to={0} prefix="$" /></div><div className="ml-k">Free for small clinics</div></motion.div>
-            <motion.div className="ml-stat" {...reveal(0.06)}><div className="ml-v"><CountUp to={75} suffix="+" /></div><div className="ml-k">Automated backend tests</div></motion.div>
-            <motion.div className="ml-stat" {...reveal(0.12)}><div className="ml-v"><CountUp to={100} suffix="%" /></div><div className="ml-k">Demo-safe · no real data</div></motion.div>
-            <motion.div className="ml-stat" {...reveal(0.18)}><div className="ml-v"><CountUp to={11} /></div><div className="ml-k">Versioned DB migrations</div></motion.div>
-          </div>
-        </div>
-
-        {/* FEATURES */}
-        <section className="ml-sec" id="features">
-          <div className="ml-wrap">
-            <motion.div className="ml-sec-head" {...reveal()}>
-              <span className="ml-eyebrow">Everything a small clinic needs</span>
-              <h2>One tidy workspace for the whole practice</h2>
-              <p>From the front desk to the follow-up — patients, appointments, and insight without the enterprise weight.</p>
-            </motion.div>
-            <div className="ml-bento">
-              <motion.div className="ml-card ml-feature-hero" {...reveal()}>
-                <div>
-                  <div className="ml-fic"><Activity size={22} /></div>
-                  <h3>Analytics that read like a morning briefing</h3>
-                  <p>Hand-built D3 charts turn your day into a glance: visit trends, confirmation rates, and what's coming next — no spreadsheets, no setup.</p>
+        {/* SHEET (cream) */}
+        <div className="ml-sheet">
+          {/* FEATURES */}
+          <section className="ml-sec" id="features">
+            <div className="ml-wrap">
+              <motion.div className="ml-sec-head" {...reveal()}>
+                <div className="ml-ratings">
+                  <span className="rt"><Check size={15} /> Free &amp; open demo</span>
+                  <span className="rt"><Check size={15} /> No sign-up to look around</span>
                 </div>
-                <div className="ml-mini-dash">
-                  <div className="ml-row"><span>Visits this week</span><span className="ml-pill g">+18%</span></div>
-                  <div className="ml-row"><span>Confirmed</span><span className="ml-pill">75%</span></div>
-                  <div className="ml-row"><span>Pending reminders</span><span className="ml-pill">4</span></div>
-                  <div className="ml-row"><span>New patients</span><span className="ml-pill g">+9</span></div>
+                <h2>Everything your clinic runs on</h2>
+                <p>Scheduling, charting, vitals, and insight — in one lightweight workspace, not five tabs.</p>
+              </motion.div>
+
+              <div className="ml-features">
+                <motion.div className="ml-fcard" {...reveal(0)}>
+                  <h3>Scheduling</h3>
+                  <p>Book, confirm, and track visits with a real status lifecycle.</p>
+                  <div className="ml-mini">
+                    <div className="ml-mini-av"><span className="a">AN</span><div><div className="nm">Book an appointment</div><div className="mt">Mon, 20 March</div></div></div>
+                    <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+                      <span className="ml-chip"><CalendarDays size={12} /> 11:30</span>
+                      <span className="ml-chip"><CalendarDays size={12} /> 12:00</span>
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div className="ml-fcard" {...reveal(0.06)}>
+                  <h3>Charting</h3>
+                  <p>SOAP notes and patient history, all in one view.</p>
+                  <div className="ml-mini">
+                    <div className="ml-mini-av"><span className="a">EJ</span><div><div className="nm">Emily Johnson</div><div className="mt">14 Feb 1985</div></div></div>
+                    <div className="ml-vit">
+                      <div className="v"><div className="vl">Temp</div><div className="vv">98°F</div></div>
+                      <div className="v"><div className="vl">SpO₂</div><div className="vv">97%</div></div>
+                      <div className="v"><div className="vl">BMI</div><div className="vv">23.5</div></div>
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div className="ml-fcard" {...reveal(0.12)}>
+                  <h3>Vitals</h3>
+                  <p>Capture vitals once — watch the trend over every visit.</p>
+                  <div className="ml-mini">
+                    <div className="row"><span>Blood pressure</span><b style={{ color: "var(--ml-forest)" }}>126/82</b></div>
+                    <div className="ml-spark">
+                      {[60, 72, 54, 80, 68, 90].map((h, i) => (
+                        <i key={i} style={{ height: `${h}%` }} />
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div className="ml-fcard" {...reveal(0.18)}>
+                  <h3>Analytics</h3>
+                  <p>The day's numbers, read like a morning briefing.</p>
+                  <div className="ml-mini">
+                    <div className="row"><span>Visits this week</span><span className="ml-chip">+18%</span></div>
+                    <svg viewBox="0 0 120 44" className="ml-line-mini" preserveAspectRatio="none">
+                      <polyline points="0,36 24,30 48,34 72,16 96,22 120,8" fill="none" stroke="var(--ml-lime)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                      <circle cx="120" cy="8" r="3" fill="var(--ml-forest)" />
+                    </svg>
+                  </div>
+                </motion.div>
+              </div>
+            </div>
+          </section>
+
+          {/* DEEP DIVE */}
+          <section className="ml-sec" id="care" style={{ paddingTop: 0 }}>
+            <div className="ml-wrap ml-dive">
+              <motion.div className="ml-notes" {...reveal()}>
+                <div className="ml-notes-photo">
+                  {/* IMAGE SLOT: care moment — drop a photo in here */}
+                  <div className="ph"><HeartPulse size={44} strokeWidth={1.4} /></div>
+                </div>
+                <div className="ml-notes-card">
+                  <div className="nh"><span className="g" /> Clinical note · signed</div>
+                  <div className="nsec"><div className="t">Subjective</div><div className="b">Cough and mild fever for three days. No shortness of breath.</div></div>
+                  <div className="nsec"><div className="t">Assessment &amp; plan</div><div className="b">Acute viral URI. Rest, fluids, review in 5 days if not improving.</div></div>
                 </div>
               </motion.div>
 
-              <motion.div className="ml-card ml-c-third" {...reveal()}>
-                <div className="ml-fic"><Users size={22} /></div>
-                <h3>Patient records</h3>
-                <p>Demographics, notes, and visit history — organized, searchable, and private to your clinic.</p>
-              </motion.div>
-              <motion.div className="ml-card ml-c-third" {...reveal(0.06)}>
-                <div className="ml-fic"><CalendarDays size={22} /></div>
-                <h3>Smart scheduling</h3>
-                <p>Book, confirm, reschedule, and complete — appointments with a real status lifecycle.</p>
-              </motion.div>
-              <motion.div className="ml-card ml-c-third" {...reveal(0.12)}>
-                <div className="ml-fic"><BellRing size={22} /></div>
-                <h3>Demo reminders</h3>
-                <p>See the reminder workflow end-to-end — simulated, so nothing ever reaches a real inbox.</p>
-              </motion.div>
-
-              <motion.div className="ml-card ml-c-half" {...reveal()}>
-                <div className="ml-fic"><FileCheck2 size={22} /></div>
-                <h3>Audit trail on every action</h3>
-                <p>Who changed what, and when. Medyra logs key actions automatically — accountability without extra effort.</p>
-              </motion.div>
-              <motion.div className="ml-card ml-c-half" {...reveal(0.06)}>
-                <div className="ml-fic"><Compass size={22} /></div>
-                <h3>Guided onboarding &amp; sample data</h3>
-                <p>A first-run tour and one-click sample records mean a new clinic is exploring in seconds, not hours.</p>
+              <motion.div className="ml-dcopy" {...reveal(0.1)}>
+                <span className="ml-eyebrow">Care, documented</span>
+                <h2>Every visit, written straight into the chart</h2>
+                <p className="d">
+                  Vitals captured at intake flow into the note. You chart the exam in a clean SOAP layout,
+                  sign it, and it locks into the patient's history — traceable, never lost in a drawer.
+                </p>
+                <div className="ml-dlist">
+                  <div className="di"><h4>Capture vitals once</h4><p>BP, HR, temp, SpO₂, weight — recorded at intake and trended across visits automatically.</p></div>
+                  <div className="di"><h4>Chart in SOAP, fast</h4><p>Subjective, Objective, Assessment, Plan — the format every clinician already thinks in.</p></div>
+                  <div className="di"><h4>Sign &amp; lock</h4><p>A signed note becomes part of the record: immutable, dated, and accountable.</p></div>
+                </div>
               </motion.div>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
 
-        {/* WORKFLOW */}
-        <section className="ml-sec" id="workflow" style={{ background: "var(--ml-paper)", borderTop: "1px solid var(--ml-line)", borderBottom: "1px solid var(--ml-line)" }}>
+        {/* TESTIMONIALS */}
+        <section className="ml-testi" id="testimonials">
           <div className="ml-wrap">
             <motion.div className="ml-sec-head" {...reveal()}>
-              <span className="ml-eyebrow">How it works</span>
-              <h2>Running by the end of your coffee</h2>
-              <p>No migrations, no consultants. Three steps from paper to a working digital record.</p>
+              <h2>Loved by small practices</h2>
+              <p>Clinics of every size use Medyra to simplify their day, document care, and keep patients close.</p>
             </motion.div>
-            <div className="ml-flow">
-              {[
-                { n: "1", t: "Create your clinic", d: "Sign up as clinic staff with a secure login. Your data is isolated to your account from the first minute.", line: true },
-                { n: "2", t: "Add patients & book", d: "Capture demographics and notes, then schedule appointments with confirm, reschedule, and complete states.", line: true },
-                { n: "3", t: "Track & improve", d: "Watch the analytics dashboard fill in, keep an eye on the audit log, and let demo reminders do the chasing.", line: false }
-              ].map((s, i) => (
-                <motion.div className="ml-step" key={s.n} {...reveal(i * 0.08)}>
-                  <div className="ml-n">{s.n}</div>
-                  {s.line && <span className="ml-ln" />}
-                  <h3>{s.t}</h3>
-                  <p>{s.d}</p>
+            <div className="ml-tgrid">
+              {TESTIMONIALS.map((t, i) => (
+                <motion.div className="ml-tcard" key={t.n} {...reveal((i % 3) * 0.05)}>
+                  <Stars />
+                  <p className="q">&ldquo;{t.q}&rdquo;</p>
+                  <div className="who">
+                    <span className="a">{initials(t.n)}</span>
+                    <div><div className="nm">{t.n}</div><div className="hd">{t.r}</div></div>
+                  </div>
                 </motion.div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* DEEP DIVE 1 — ANALYTICS */}
-        <section className="ml-sec">
-          <div className="ml-wrap ml-dive">
-            <motion.div className="ml-dcopy" {...reveal()}>
-              <span className="ml-eyebrow">The dashboard</span>
-              <h2>Your clinic's day, at a glance</h2>
-              <p className="ml-d">Open Medyra and the picture is already there — how many patients, how many visits, how many still need a nudge. Built with D3 so every chart is crisp, responsive, and genuinely yours.</p>
-              <div className="ml-dlist">
-                <div className="ml-di"><Check size={18} /><span><b>Live KPIs</b> — patients, today's visits, and confirmation rate up top.</span></div>
-                <div className="ml-di"><Check size={18} /><span><b>Visit-type trends</b> — hand-built bar &amp; line charts, no chart-library bloat.</span></div>
-                <div className="ml-di"><Check size={18} /><span><b>What's next panel</b> — the day's upcoming appointments, ranked.</span></div>
-              </div>
-            </motion.div>
-            <motion.div className="ml-panel" {...reveal(0.1)}>
-              <div className="ml-kpi-row">
-                <div className="ml-kpi"><div className="ml-l">Revenue-ready visits</div><div className="ml-v">156</div></div>
-                <div className="ml-kpi"><div className="ml-l">Confirmed</div><div className="ml-v">112</div></div>
-                <div className="ml-kpi"><div className="ml-l">Unconfirmed</div><div className="ml-v">44</div></div>
-              </div>
-              <div className="ml-mock-chart" style={{ marginBottom: 0 }}>
-                <div className="ml-mc-head"><span className="ml-t">Visits over time</span><span className="ml-lg"><i /> 6 months</span></div>
-                <div className="ml-bars">
-                  {diveBars.map((b, i) => (
-                    <div className="ml-bar-col" key={i}>
-                      <GrowBar h={b.h} alt={b.alt} />
-                      <span className="ml-m">{["Mar", "Apr", "May", "Jun", "Jul", "Aug"][i]}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* DEEP DIVE 2 — SCHEDULING */}
-        <section className="ml-sec" style={{ paddingTop: 0 }}>
-          <div className="ml-wrap ml-dive rev">
-            <motion.div className="ml-dcopy" {...reveal()}>
-              <span className="ml-eyebrow">Scheduling</span>
-              <h2>Appointments with a real lifecycle</h2>
-              <p className="ml-d">Not just a calendar — a workflow. Every appointment moves through booked, confirmed, and completed, with the actions a front desk actually uses, and a themed date-time picker that matches the rest of the app.</p>
-              <div className="ml-dlist">
-                <div className="ml-di"><Check size={18} /><span><b>Status at a glance</b> — colour-coded confirmed, pending, and consultation states.</span></div>
-                <div className="ml-di"><Check size={18} /><span><b>One-tap actions</b> — confirm, reschedule, or complete without leaving the list.</span></div>
-                <div className="ml-di"><Check size={18} /><span><b>Demo reminders</b> — the full nudge flow, safely simulated.</span></div>
-              </div>
-            </motion.div>
-            <motion.div className="ml-panel" {...reveal(0.1)}>
-              <div className="ml-sch-head"><span className="ml-t">Thursday, 18 September</span><span className="ml-d">4 appointments</span></div>
-              <div className="ml-slot g"><span className="ml-bar2" /><span className="ml-time">09:30</span><div><div className="ml-nm">Asha Nair</div><div className="ml-ty">General check-up</div></div><span className="ml-st">Confirmed</span></div>
-              <div className="ml-slot a"><span className="ml-bar2" /><span className="ml-time">10:15</span><div><div className="ml-nm">Ravi Kumar</div><div className="ml-ty">Follow-up</div></div><span className="ml-st">Pending</span></div>
-              <div className="ml-slot c"><span className="ml-bar2" /><span className="ml-time">11:00</span><div><div className="ml-nm">Meera Fernandes</div><div className="ml-ty">Consultation</div></div><span className="ml-st">Consult</span></div>
-              <div className="ml-slot g"><span className="ml-bar2" /><span className="ml-time">11:45</span><div><div className="ml-nm">Sunil Rao</div><div className="ml-ty">Blood pressure review</div></div><span className="ml-st">Confirmed</span></div>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* DEEP DIVE 3 — RECORDS */}
-        <section className="ml-sec" style={{ paddingTop: 0 }}>
-          <div className="ml-wrap ml-dive">
-            <motion.div className="ml-dcopy" {...reveal()}>
-              <span className="ml-eyebrow">Patient records</span>
-              <h2>Every patient, private to your clinic</h2>
-              <p className="ml-d">Medyra is multi-tenant by design — each clinic account only ever sees its own patients, enforced on the server and covered by tests. Search, open, and read a full history in a couple of clicks.</p>
-              <div className="ml-dlist">
-                <div className="ml-di"><Check size={18} /><span><b>Isolated by account</b> — tenant separation enforced in the backend.</span></div>
-                <div className="ml-di"><Check size={18} /><span><b>Full demographics &amp; notes</b> — the details a visit actually needs.</span></div>
-                <div className="ml-di"><Check size={18} /><span><b>Clean, searchable list</b> — find anyone fast, even as records grow.</span></div>
-              </div>
-            </motion.div>
-            <motion.div className="ml-panel" {...reveal(0.1)}>
-              {[
-                { in: "AN", nm: "Asha Nair", me: "39 · F · last visit Oct 20", tag: "Active" },
-                { in: "RK", nm: "Ravi Kumar", me: "52 · M · last visit Sep 05", tag: "Active" },
-                { in: "MF", nm: "Meera Fernandes", me: "34 · F · last visit Sep 04", tag: "Active" },
-                { in: "SR", nm: "Sunil Rao", me: "61 · M · last visit Oct 04", tag: "Follow-up" },
-                { in: "PV", nm: "Priya Verma", me: "28 · F · last visit Oct 07", tag: "Active" }
-              ].map((r) => (
-                <div className="ml-rec-row" key={r.nm}>
-                  <span className="ml-av">{r.in}</span>
-                  <div><div className="ml-nm">{r.nm}</div><div className="ml-me">{r.me}</div></div>
-                  <span className="ml-tag">{r.tag}</span>
-                </div>
-              ))}
-            </motion.div>
-          </div>
-        </section>
-
-        {/* SECURITY */}
-        <section className="ml-sec ml-sec-dark" id="security">
+        {/* FAQ */}
+        <section className="ml-sec" id="faq">
           <div className="ml-wrap">
             <motion.div className="ml-sec-head" {...reveal()}>
-              <span className="ml-eyebrow">Built to be trusted</span>
-              <h2>Security that fits a clinic, not a committee</h2>
-              <p>Medyra is a demo — but it's engineered like production. The safeguards a real EMR needs, baked in from the start.</p>
+              <h2>Frequently asked questions</h2>
             </motion.div>
-            <div className="ml-sgrid">
-              {securityItems.map((s, i) => {
-                const Icon = s.icon;
+            <div className="ml-faq">
+              {FAQS.map((f, i) => {
+                const open = openFaq === i;
                 return (
-                  <motion.div className="ml-scard" key={s.title} {...reveal((i % 3) * 0.06)}>
-                    <div className="ml-sic"><Icon size={20} /></div>
-                    <h3>{s.title}</h3>
-                    <p>{s.text}</p>
-                  </motion.div>
+                  <div className={`ml-q${open ? " open" : ""}`} key={f.q}>
+                    <button onClick={() => setOpenFaq(open ? null : i)} aria-expanded={open}>
+                      {f.q}
+                      <span className="ic"><Plus size={16} /></span>
+                    </button>
+                    <AnimatePresence initial={false}>
+                      {open && (
+                        <motion.div className="ans" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: [0.2, 0.7, 0.3, 1] }} style={{ overflow: "hidden" }}>
+                          <p>{f.a}</p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 );
               })}
             </div>
           </div>
         </section>
 
-        {/* BUILT WITH */}
-        <section className="ml-sec" id="built">
+        {/* STORIES */}
+        <section className="ml-sec" id="stories" style={{ paddingTop: 0 }}>
           <div className="ml-wrap">
-            <motion.div className="ml-sec-head" {...reveal()}>
-              <span className="ml-eyebrow">Built end-to-end by one engineer</span>
-              <h2>A full-stack project, start to finish</h2>
-              <p>Design, frontend, backend, database, and deployment — Medyra is a portfolio piece built the way a real product is shipped.</p>
+            <motion.div className="ml-stories-head" {...reveal()}>
+              <h2>Guidance &amp; stories</h2>
             </motion.div>
-            <motion.div className="ml-stack-row" {...reveal(0.05)}>
-              {techStack.map((t) => (
-                <span className="ml-tech" key={t.n}><span className="ml-td" style={{ background: t.c }} />{t.n}</span>
-              ))}
-            </motion.div>
-          </div>
-        </section>
-
-        {/* FAQ */}
-        <section className="ml-sec" id="faq" style={{ background: "var(--ml-paper)", borderTop: "1px solid var(--ml-line)" }}>
-          <div className="ml-wrap">
-            <motion.div className="ml-sec-head" {...reveal()}>
-              <span className="ml-eyebrow">Questions, answered</span>
-              <h2>Good to know</h2>
-            </motion.div>
-            <div className="ml-faq">
-              {faqs.map((f, i) => (
-                <FaqItem key={f.q} item={f} open={openFaq === i} onToggle={() => setOpenFaq(openFaq === i ? null : i)} />
+            <div className="ml-stories">
+              {STORIES.map((s, i) => (
+                <motion.button className="ml-story" key={s.title} onClick={() => setOpenStory(s)} {...reveal((i) * 0.07)}>
+                  <div className="ml-story-img">
+                    {s.variant === "photo" ? (
+                      <div className="ml-story-graphic">
+                        <svg width="120" height="80" viewBox="0 0 120 80" fill="none">
+                          <rect x="34" y="16" width="52" height="48" rx="8" fill="#394831" />
+                          <rect x="44" y="26" width="32" height="3" rx="1.5" fill="#9FBF60" />
+                          <rect x="44" y="34" width="24" height="3" rx="1.5" fill="#D8E6BB" opacity=".6" />
+                          <path d="M42 50 h8 l3 -8 4 14 3 -6 h15" stroke="#9FBF60" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
+                    ) : s.variant === "invoice" ? (
+                      <div className="ml-story-graphic">
+                        <svg width="120" height="80" viewBox="0 0 120 80" fill="none">
+                          <rect x="42" y="14" width="36" height="52" rx="4" fill="#D8E6BB" />
+                          {[24, 32, 40, 48].map((y) => <rect key={y} x="48" y={y} width="24" height="3" rx="1.5" fill="#2E3A26" opacity=".4" />)}
+                          <circle cx="30" cy="26" r="7" fill="#394831" /><circle cx="90" cy="26" r="7" fill="#394831" />
+                          <circle cx="30" cy="54" r="7" fill="#394831" /><circle cx="90" cy="54" r="7" fill="#394831" />
+                        </svg>
+                      </div>
+                    ) : (
+                      <div className="ml-story-graphic ml-sg-nodes">
+                        <span className="n"><HeartPulse size={18} color="#9FBF60" /></span>
+                        <span className="doc" />
+                        <span className="n"><ClipboardList size={18} color="#9FBF60" /></span>
+                      </div>
+                    )}
+                  </div>
+                  <span className="ml-story-cat">{s.cat}</span>
+                  <h3>{s.title}</h3>
+                  <p className="ex">{s.excerpt}</p>
+                  <p className="meta">{s.date} · {s.author} · {s.read}</p>
+                </motion.button>
               ))}
             </div>
           </div>
         </section>
 
         {/* FINAL CTA */}
-        <section className="ml-sec">
-          <div className="ml-wrap">
-            <motion.div className="ml-cta-final" {...reveal()}>
-              <h2>See Medyra in action</h2>
-              <p>Open the demo, load the sample clinic, and click around — no real patient data, nothing at stake.</p>
-              <div className="ml-hero-cta">
-                <Link className="ml-btn ml-btn-white" to={DEMO_URL}>Create your clinic <span className="ml-arrow">→</span></Link>
-                <Link className="ml-btn ml-btn-outline-w" to={LOGIN_URL}>Log in</Link>
-              </div>
-            </motion.div>
-          </div>
+        <section className="ml-wrap ml-final">
+          <motion.div {...reveal()}>
+            <h2>Bring your clinic online</h2>
+            <p>Join the small practices simplifying scheduling, charting, and patient care in one calm place.</p>
+            <div className="ml-hero-cta">
+              <Link className="ml-btn ml-btn-primary" to={DEMO_URL}>Start for free</Link>
+              <Link className="ml-btn ml-btn-outline" to={LOGIN_URL}>Log in</Link>
+            </div>
+          </motion.div>
         </section>
 
         {/* FOOTER */}
         <footer className="ml-footer">
           <div className="ml-wrap">
             <div className="ml-foot">
-              <div className="ml-fb">
-                <div className="ml-brand"><BrandGlyph /> Medyra</div>
-                <p>A lightweight, free electronic medical record for small clinics. A demo-first, full-stack portfolio project.</p>
+              <div className="fb">
+                <Link to="/" className="ml-brand"><Glyph /> Medyra</Link>
+                <p>A lightweight, free electronic medical record for small clinics. A demo-first, full-stack project.</p>
+                <div className="fsoc">
+                  <a href="#" aria-label="LinkedIn"><Linkedin size={16} /></a>
+                  <a href="#" aria-label="X"><Twitter size={16} /></a>
+                  <a href="#" aria-label="Instagram"><Instagram size={16} /></a>
+                  <a href="#" aria-label="Facebook"><Facebook size={16} /></a>
+                </div>
               </div>
-              <div className="ml-foot-links">
-                <div className="ml-fcol"><h4>Product</h4><a href="#features">Features</a><a href="#workflow">Workflow</a><a href="#security">Security</a><Link to={DEMO_URL}>Live demo</Link></div>
-                <div className="ml-fcol"><h4>Project</h4><a href="#built">Built with</a><a href="#faq">FAQ</a><a href="#security">Engineering</a></div>
-                <div className="ml-fcol"><h4>Try it</h4><Link to={DEMO_URL}>Open demo</Link><Link to={DEMO_URL}>Create a clinic login</Link><Link to={LOGIN_URL}>Log in</Link></div>
-              </div>
+              <div className="ml-fcol"><h4>Product</h4><a href="#features">Scheduling</a><a href="#features">Charting</a><a href="#features">Vitals</a><a href="#features">Analytics</a></div>
+              <div className="ml-fcol"><h4>Resources</h4><a href="#stories">Guidance</a><a href="#faq">FAQ</a><a href="#testimonials">Customers</a></div>
+              <div className="ml-fcol"><h4>Get started</h4><Link to={DEMO_URL}>Create a clinic login</Link><Link to={LOGIN_URL}>Log in</Link><Link to={DEMO_URL}>Open the demo</Link></div>
             </div>
             <div className="ml-foot-base">
-              <span>© 2026 Medyra · A portfolio project. Demo only — not for real patient data.</span>
-              <span>Designed &amp; built end-to-end by one engineer.</span>
+              <span>© 2026 Medyra · Demo only — not for real patient data.</span>
+              <span className="lnks"><a href="#">Privacy</a><a href="#">Terms</a><a href="#faq">Security</a></span>
             </div>
           </div>
         </footer>
+
+        {/* STORY MODAL */}
+        <AnimatePresence>
+          {openStory && (
+            <motion.div className="ml-modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setOpenStory(null)}>
+              <motion.div className="ml-modal" initial={{ opacity: 0, y: 24, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 24, scale: 0.98 }} transition={{ duration: 0.3, ease: [0.2, 0.7, 0.3, 1] }} onClick={(e) => e.stopPropagation()}>
+                <div className="ml-modal-hero">
+                  <span style={{ color: "var(--ml-on-dark-mute)", fontSize: 12 }}>Medyra · {openStory.cat}</span>
+                  <button className="ml-modal-close" onClick={() => setOpenStory(null)} aria-label="Close"><X size={18} /></button>
+                </div>
+                <div className="ml-modal-body">
+                  <span className="cat">{openStory.cat}</span>
+                  <h2>{openStory.title}</h2>
+                  <p className="meta">{openStory.date} · {openStory.author} · {openStory.read}</p>
+                  <div className="article">
+                    {openStory.body.map((blk, i) => (
+                      <div key={i}>
+                        {blk.h && <h3>{blk.h}</h3>}
+                        {blk.p && <p>{blk.p}</p>}
+                        {blk.list && <ul>{blk.list.map((li) => <li key={li}>{li}</li>)}</ul>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </MotionConfig>
   );
