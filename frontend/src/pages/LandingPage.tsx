@@ -22,6 +22,8 @@ import {
   X
 } from "lucide-react";
 
+import heroDoctor from "../assets/landing/hero-doctor.png";
+import consultation from "../assets/landing/consultation.png";
 import "../styles/landing.css";
 
 const DEMO_URL = "/signup";
@@ -220,6 +222,7 @@ const LandingPage = () => {
             </motion.div>
 
             <motion.div className="ml-hero-visual" {...reveal(0.12)}>
+              <img className="ml-hero-doc" src={heroDoctor} alt="A clinician using Medyra on a laptop" />
               <div className="ml-dash">
                 <div className="ml-dash-top"><span className="ml-g" /> Medyra · Dashboard</div>
                 <div className="ml-dash-kpis">
@@ -333,8 +336,7 @@ const LandingPage = () => {
             <div className="ml-wrap ml-dive">
               <motion.div className="ml-notes" {...reveal()}>
                 <div className="ml-notes-photo">
-                  {/* IMAGE SLOT: care moment — drop a photo in here */}
-                  <div className="ph"><HeartPulse size={44} strokeWidth={1.4} /></div>
+                  <img src={consultation} alt="A clinician in conversation with a patient" loading="lazy" />
                 </div>
                 <div className="ml-notes-card">
                   <div className="nh"><span className="g" /> Clinical note · signed</div>
