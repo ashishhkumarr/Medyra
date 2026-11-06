@@ -1,11 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  AnimatePresence,
-  MotionConfig,
-  motion,
-  useReducedMotion
-} from "framer-motion";
+import { AnimatePresence, MotionConfig, motion } from "framer-motion";
 import {
   BellRing,
   CalendarDays,
@@ -151,7 +146,6 @@ const LandingPage = () => {
   const [scrolled, setScrolled] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [openStory, setOpenStory] = useState<Story | null>(null);
-  const reduce = useReducedMotion();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 10);
@@ -242,16 +236,16 @@ const LandingPage = () => {
                 </div>
               </div>
 
-              <motion.div className="ml-float ml-fc-patient" animate={reduce ? undefined : { y: [0, -8, 0] }} transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}>
+              <motion.div className="ml-float ml-fc-patient">
                 <span className="av">AN</span>
                 <div><div className="nm">Asha Nair</div><div className="rl">Patient · new visit</div></div>
               </motion.div>
-              <motion.div className="ml-float ml-fc-remind" animate={reduce ? undefined : { y: [0, -9, 0] }} transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}>
+              <motion.div className="ml-float ml-fc-remind">
                 <div className="rt"><BellRing size={14} /> Reminder</div>
                 <div className="rs">Appointment tomorrow at 10:00 AM.</div>
                 <div className="rb">Confirm</div>
               </motion.div>
-              <motion.div className="ml-float light ml-fc-ring" animate={reduce ? undefined : { y: [0, -7, 0] }} transition={{ duration: 6.5, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}>
+              <motion.div className="ml-float light ml-fc-ring">
                 <span className="ml-ring"><span>156</span></span>
                 <div>
                   <div className="rv">Upcoming visits</div>
