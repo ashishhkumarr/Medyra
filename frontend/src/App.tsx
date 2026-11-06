@@ -19,6 +19,7 @@ import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import PatientListPage from "./pages/PatientListPage";
+import SchedulePage from "./pages/SchedulePage";
 import PatientDetailPage from "./pages/PatientRecordDetailsPage";
 import SignupPage from "./pages/SignupPage";
 import ChangePasswordPage from "./pages/ChangePasswordPage";
@@ -85,6 +86,14 @@ const App = () => {
             element={
               <ProtectedRoute roles={["admin"]}>
                 <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/schedule"
+            element={
+              <ProtectedRoute roles={["admin"]}>
+                <SchedulePage />
               </ProtectedRoute>
             }
           />

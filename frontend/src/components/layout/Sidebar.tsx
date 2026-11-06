@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   Calendar,
+  CalendarDays,
   CalendarPlus,
   Home,
   Info,
@@ -30,6 +31,7 @@ interface NavItem {
 const mainNav: NavItem[] = [
   { to: "/admin", label: "Dashboard", icon: Home, tour: "nav-dashboard", end: true },
   { to: "/patients", label: "Patients", icon: Users, tour: "nav-patients" },
+  { to: "/schedule", label: "Schedule", icon: CalendarDays },
   { to: "/appointments", label: "Appointments", icon: Calendar, tour: "nav-appointments", end: true },
   { to: "/appointments/create", label: "New appointment", icon: CalendarPlus, tour: "nav-new-appointment" }
 ];
