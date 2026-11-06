@@ -34,12 +34,13 @@ const reveal = (delay = 0) => ({
 
 /* ---------------- brand mark ---------------- */
 const Glyph = ({ className = "ml-glyph" }: { className?: string }) => (
-  <span className={className} aria-hidden>
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-      <path d="M12 21s-7-4.3-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.7-7 10-7 10Z" fill="#9FBF60" opacity=".95" />
-      <path d="M6.5 12.5h3l1.3-2.5 1.8 4 1.2-2h3.2" stroke="#2E3A26" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  </span>
+  <svg className={className} viewBox="0 0 32 32" fill="none" aria-hidden>
+    <path d="M16 3 5 7.5V15c0 6.5 4.8 10.8 11 13 6.2-2.2 11-6.5 11-13V7.5Z" fill="#2E3A26" />
+    <path
+      d="M16 20c-4.2-3.2-6.5-5-6.5-7.6A2.8 2.8 0 0 1 16 10.3a2.8 2.8 0 0 1 6.5 2.1c0 2.6-2.3 4.4-6.5 7.6Z"
+      fill="#9FBF60"
+    />
+  </svg>
 );
 
 /* ---------------- data ---------------- */

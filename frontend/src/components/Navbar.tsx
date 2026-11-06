@@ -17,7 +17,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../hooks/useAuth";
 import { APP_NAME } from "../config/brand";
-import { BrandLogo } from "./BrandLogo";
+import { BrandLockup, BrandMark } from "./BrandLogo";
 import { Button } from "./ui/Button";
 
 const navBase =
@@ -131,10 +131,7 @@ export const Navbar = () => {
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-lg font-semibold text-text">
-                <BrandLogo className="h-8 w-8" />
-                {APP_NAME}
-              </div>
+              <BrandLockup />
               <button
                 type="button"
                 aria-label="Close menu"
@@ -288,10 +285,16 @@ export const Navbar = () => {
         <NavLink
           to="/"
           data-tour="nav-brand"
-          className="flex items-center gap-2 text-lg font-semibold text-text"
+          className="flex items-center gap-2.5 text-text"
         >
-          <BrandLogo className="h-8 w-8 sm:h-9 sm:w-9" />
-          <span className={isLandingPage ? "inline" : "hidden sm:inline"}>{APP_NAME}</span>
+          <BrandMark className="h-8 w-8 flex-none" />
+          <span
+            className={`font-display text-[22px] leading-none tracking-tight ${
+              isLandingPage ? "inline" : "hidden sm:inline"
+            }`}
+          >
+            {APP_NAME}
+          </span>
         </NavLink>
         {user ? (
           <div className="hidden flex-wrap items-center gap-3 md:flex">

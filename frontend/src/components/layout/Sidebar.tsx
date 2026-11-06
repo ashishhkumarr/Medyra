@@ -16,9 +16,8 @@ import {
   X
 } from "lucide-react";
 
-import { APP_NAME } from "../../config/brand";
 import { useAuth } from "../../hooks/useAuth";
-import { BrandLogo } from "../BrandLogo";
+import { BrandLockup } from "../BrandLogo";
 
 interface NavItem {
   to: string;
@@ -98,9 +97,8 @@ export const Sidebar = () => {
 
   const railContent = (onNavigate?: () => void) => (
     <>
-      <NavLink to="/admin" className="flex items-center gap-2.5 px-2 py-1" onClick={onNavigate}>
-        <BrandLogo className="h-9 w-9" />
-        <span className="text-lg font-bold tracking-tight text-text">{APP_NAME}</span>
+      <NavLink to="/admin" className="flex items-center px-2 py-1" onClick={onNavigate}>
+        <BrandLockup />
       </NavLink>
 
       <p className="mt-6 px-3 text-[11px] font-semibold uppercase tracking-[0.12em] text-text-subtle">
@@ -151,9 +149,8 @@ export const Sidebar = () => {
 
       {/* Mobile top bar */}
       <div className="sticky top-0 z-30 flex items-center justify-between border-b border-border/60 bg-surface/85 px-4 py-3 backdrop-blur lg:hidden">
-        <NavLink to="/admin" className="flex items-center gap-2">
-          <BrandLogo className="h-8 w-8" />
-          <span className="text-base font-bold text-text">{APP_NAME}</span>
+        <NavLink to="/admin" className="flex items-center">
+          <BrandLockup />
         </NavLink>
         <button
           type="button"
