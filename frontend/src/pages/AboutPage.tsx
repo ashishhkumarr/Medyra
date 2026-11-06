@@ -10,7 +10,7 @@ const AboutPage = () => {
 
   return (
     <div className="w-full space-y-8">
-      <Card className="space-y-8 p-6 sm:p-8 lg:p-10 hover:border-primary/30 hover:shadow-[0_24px_50px_-24px_rgba(13,110,104,0.3)]">
+      <Card className="space-y-8 p-6 sm:p-8 lg:p-10 hover:border-primary/30 hover:shadow-[0_24px_50px_-24px_rgba(46,58,38,0.3)]">
         <SectionHeader
           title="About Medyra"
           description="A demo-first Electronic Medical Record (EMR) system built to showcase full-stack engineering, UX, and product thinking."

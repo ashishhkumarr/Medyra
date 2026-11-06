@@ -15,7 +15,7 @@ const baseStyles =
 
 const variantStyles: Record<Variant, string> = {
   primary:
-    "bg-primary text-white shadow-[0_10px_24px_-12px_rgba(13,110,104,0.8)] hover:bg-primary-strong hover:shadow-[0_16px_30px_-12px_rgba(13,110,104,0.7)] focus-visible:ring-primary/40",
+    "bg-primary text-white shadow-[0_10px_24px_-12px_rgba(46,58,38,0.8)] hover:bg-primary-strong hover:shadow-[0_16px_30px_-12px_rgba(46,58,38,0.7)] focus-visible:ring-primary/40",
   secondary:
     "border border-border/60 bg-surface/70 text-text shadow-sm backdrop-blur hover:border-primary/30 hover:bg-surface/90 focus-visible:ring-primary/30",
   ghost:

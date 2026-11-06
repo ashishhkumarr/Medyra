@@ -8,58 +8,58 @@
 
 :root {
   color-scheme: light;
-  /* Clinical Editorial — bone ground, deep teal-green ink, cyan + health-green */
-  --color-bg: 247 245 239;
-  --color-surface: 252 251 247;
-  --color-surface-subtle: 242 239 230;
-  --color-surface-muted: 233 228 212;
-  --color-text: 18 48 44;
-  --color-text-muted: 74 95 89;
-  --color-text-subtle: 107 122 115;
-  --color-border: 228 222 207;
-  --color-primary: 13 110 104;
-  --color-primary-strong: 10 87 82;
-  --color-primary-soft: 212 233 229;
-  --color-secondary: 14 143 168;
-  --color-secondary-soft: 214 236 242;
-  --color-success: 14 124 83;
-  --color-success-soft: 210 236 223;
+  /* Sage editorial — forest green on soft sage-cream (matches the landing) */
+  --color-bg: 246 248 239;
+  --color-surface: 253 253 248;
+  --color-surface-subtle: 241 244 233;
+  --color-surface-muted: 231 238 219;
+  --color-text: 31 42 26;
+  --color-text-muted: 67 78 58;
+  --color-text-subtle: 107 116 98;
+  --color-border: 225 231 212;
+  --color-primary: 46 58 38;
+  --color-primary-strong: 34 48 25;
+  --color-primary-soft: 221 232 201;
+  --color-secondary: 79 122 99;
+  --color-secondary-soft: 219 232 223;
+  --color-success: 92 138 60;
+  --color-success-soft: 226 238 203;
   --color-warning: 156 107 26;
   --color-warning-soft: 243 231 207;
   --color-danger: 185 60 60;
   --color-danger-soft: 245 221 218;
-  --shadow-card: 0 2px 6px rgba(18, 48, 44, 0.06), 0 24px 50px -28px rgba(18, 48, 44, 0.3);
-  --glass-card: 252 251 247;
+  --shadow-card: 0 2px 6px rgba(31, 42, 26, 0.06), 0 24px 50px -28px rgba(31, 42, 26, 0.3);
+  --glass-card: 253 253 248;
   --glass-panel: 255 255 255;
   --glass-input: 255 255 255;
 }
 
 .dark {
   color-scheme: dark;
-  /* Clinical Editorial — deep teal night */
-  --color-bg: 10 23 20;
-  --color-surface: 17 34 30;
-  --color-surface-subtle: 14 28 25;
-  --color-surface-muted: 23 44 39;
-  --color-text: 234 240 237;
-  --color-text-muted: 165 190 183;
-  --color-text-subtle: 120 145 138;
-  --color-border: 33 54 48;
-  --color-primary: 45 212 191;
-  --color-primary-strong: 94 234 212;
-  --color-primary-soft: 16 54 48;
-  --color-secondary: 94 200 220;
-  --color-secondary-soft: 18 50 56;
-  --color-success: 52 211 153;
-  --color-success-soft: 16 54 40;
+  /* Sage editorial — deep forest night */
+  --color-bg: 16 24 14;
+  --color-surface: 24 34 20;
+  --color-surface-subtle: 20 29 17;
+  --color-surface-muted: 31 44 26;
+  --color-text: 232 238 223;
+  --color-text-muted: 176 190 165;
+  --color-text-subtle: 128 142 118;
+  --color-border: 42 56 36;
+  --color-primary: 142 178 86;
+  --color-primary-strong: 173 204 118;
+  --color-primary-soft: 38 52 28;
+  --color-secondary: 138 184 150;
+  --color-secondary-soft: 28 46 32;
+  --color-success: 139 196 92;
+  --color-success-soft: 28 48 20;
   --color-warning: 224 180 74;
   --color-warning-soft: 64 48 20;
   --color-danger: 240 120 120;
   --color-danger-soft: 70 30 30;
   --shadow-card: 0 2px 6px rgba(0, 0, 0, 0.4), 0 24px 50px -28px rgba(0, 0, 0, 0.7);
-  --glass-card: 17 34 30;
-  --glass-panel: 20 40 35;
-  --glass-input: 18 36 32;
+  --glass-card: 24 34 20;
+  --glass-panel: 28 40 24;
+  --glass-input: 26 38 22;
 }
 
 html {
@@ -79,9 +79,10 @@ body {
 }
 
 .font-display {
-  font-family: "Calistoga", ui-serif, Georgia, serif;
-  font-weight: 400;
-  letter-spacing: -0.015em;
+  font-family: "Fraunces", ui-serif, Georgia, serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  letter-spacing: -0.01em;
 }
 
 #root {
@@ -92,15 +93,15 @@ body {
   position: relative;
   min-height: 100vh;
   padding-bottom: env(safe-area-inset-bottom);
-  background: radial-gradient(60% 45% at 88% 0%, rgba(14, 143, 168, 0.07), transparent 60%),
-    radial-gradient(55% 40% at 0% 6%, rgba(13, 110, 104, 0.06), transparent 60%),
+  background: radial-gradient(60% 45% at 88% 0%, rgba(159, 191, 96, 0.14), transparent 60%),
+    radial-gradient(55% 40% at 0% 6%, rgba(46, 58, 38, 0.06), transparent 60%),
     rgb(var(--color-bg));
   overflow: hidden;
 }
 
 .dark .app-shell {
-  background: radial-gradient(60% 45% at 88% 0%, rgba(45, 212, 191, 0.1), transparent 60%),
-    radial-gradient(55% 40% at 0% 6%, rgba(14, 143, 168, 0.1), transparent 60%),
+  background: radial-gradient(60% 45% at 88% 0%, rgba(159, 191, 96, 0.12), transparent 60%),
+    radial-gradient(55% 40% at 0% 6%, rgba(67, 82, 58, 0.14), transparent 60%),
     rgb(var(--color-bg));
 }
 

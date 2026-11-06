@@ -55,7 +55,7 @@ export const MicroHint = ({ text, condition = true, onceKey, className }: MicroH
         reduceMotion ? "" : "transition-opacity duration-150"
       } ${visible || reduceMotion ? "opacity-100" : "opacity-0"} ${className ?? ""}`}
     >
-      <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/50 shadow-[0_0_8px_rgba(13,110,104,0.25)]" />
+      <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-primary/50 shadow-[0_0_8px_rgba(46,58,38,0.25)]" />
       <span>{text}</span>
     </p>
   );

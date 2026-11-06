@@ -6,7 +6,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
-        display: ["Calistoga", "ui-serif", "Georgia", "serif"]
+        display: ["Fraunces", "ui-serif", "Georgia", "serif"]
       },
       colors: {
         surface: {
