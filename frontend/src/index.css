@@ -107,7 +107,10 @@ body {
   background: radial-gradient(60% 45% at 88% 0%, rgba(159, 191, 96, 0.14), transparent 60%),
     radial-gradient(55% 40% at 0% 6%, rgba(46, 58, 38, 0.06), transparent 60%),
     rgb(var(--color-bg));
-  overflow: hidden;
+  /* overflow-x: clip keeps the ambient orbs from causing horizontal scroll
+     WITHOUT turning .app-shell into a scroll container — which would break
+     the sidebar's position: sticky. (overflow: hidden would re-break it.) */
+  overflow-x: clip;
 }
 
 .dark .app-shell {
