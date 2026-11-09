@@ -16,3 +16,6 @@ frontend/.env
 # local dev overrides (points dev server at a remote backend)
 frontend/.env.local
 .env.local
+
+# marketing working files (carousel, screenshots) — kept local, not committed
+marketing/
