@@ -26,8 +26,8 @@ services:
 
   backend:
     build:
-      context: .
-      dockerfile: backend/Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     command: uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
     environment:
       DATABASE_URL: postgresql+psycopg2://meditrack:meditrack@db:5432/meditrack
@@ -35,10 +35,7 @@ services:
       ACCESS_TOKEN_EXPIRE_MINUTES: 60
       ADMIN_DEFAULT_EMAIL: admin@meditrack.com
       ADMIN_DEFAULT_PASSWORD: ChangeMe123!
-<<<<<<< HEAD
-=======
       EMAIL_ENABLED: "false"
->>>>>>> v2
     volumes:
       - ./backend/app:/app/app
       - ./backend/alembic:/app/alembic
