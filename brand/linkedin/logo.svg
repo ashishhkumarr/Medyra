@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7F9F0"/>
+      <stop offset="1" stop-color="#E8EFDA"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.82" cy="0.14" r="0.9">
+      <stop offset="0" stop-color="#9FBF60" stop-opacity="0.28"/>
+      <stop offset="0.5" stop-color="#9FBF60" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="shadow" cx="0.5" cy="0.62" r="0.5">
+      <stop offset="0.7" stop-color="#2E3A26" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#2E3A26" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="300" height="300" fill="url(#bg)"/>
+  <rect width="300" height="300" fill="url(#glow)"/>
+
+  <!-- soft grounding shadow under the mark -->
+  <ellipse cx="150" cy="212" rx="78" ry="20" fill="url(#shadow)"/>
+
+  <!-- Medyra mark (viewBox 0 0 32 32) scaled x5, centered -->
+  <g transform="translate(70,66) scale(5)">
+    <path d="M16 3 5 7.5V15c0 6.5 4.8 10.8 11 13 6.2-2.2 11-6.5 11-13V7.5Z" fill="#2E3A26"/>
+    <path d="M16 20c-4.2-3.2-6.5-5-6.5-7.6A2.8 2.8 0 0 1 16 10.3a2.8 2.8 0 0 1 6.5 2.1c0 2.6-2.3 4.4-6.5 7.6Z" fill="#9FBF60"/>
+  </g>
+</svg>
