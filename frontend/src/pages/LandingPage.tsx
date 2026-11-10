@@ -6,12 +6,9 @@ import {
   CalendarDays,
   Check,
   ClipboardList,
-  Facebook,
   HeartPulse,
-  Instagram,
   Linkedin,
   Plus,
-  Twitter,
   X
 } from "lucide-react";
 
@@ -472,10 +469,7 @@ const LandingPage = () => {
                 <Link to="/" className="ml-brand"><Glyph /> Medyra</Link>
                 <p>A lightweight, free electronic medical record for small clinics. A demo-first, full-stack project.</p>
                 <div className="fsoc">
-                  <a href="#" aria-label="LinkedIn"><Linkedin size={16} /></a>
-                  <a href="#" aria-label="X"><Twitter size={16} /></a>
-                  <a href="#" aria-label="Instagram"><Instagram size={16} /></a>
-                  <a href="#" aria-label="Facebook"><Facebook size={16} /></a>
+                  <a href="https://www.linkedin.com/company/medyra/" target="_blank" rel="noreferrer" aria-label="LinkedIn"><Linkedin size={16} /></a>
                 </div>
               </div>
               <div className="ml-fcol"><h4>Product</h4><a href="#features">Scheduling</a><a href="#features">Charting</a><a href="#features">Vitals</a><a href="#features">Analytics</a></div>
