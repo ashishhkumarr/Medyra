@@ -356,14 +356,14 @@ const LandingPage = () => {
             <motion.div className="ml-sec-head" {...reveal()}>
               <span className="ml-kicker">A portfolio project · built solo</span>
               <h2>Built by one developer, end to end.</h2>
-              <p>Medyra is a demonstration project, not a company — so there are no customers to quote. What there is: the clinical and engineering reasoning behind every part of it.</p>
+              <p>From the database schema to the design system, every part of Medyra was built with intent. Here&rsquo;s the clinical and engineering reasoning behind it.</p>
             </motion.div>
 
             <motion.figure className="ml-note" {...reveal(0.05)}>
               <blockquote>
-                I&rsquo;m a full-stack developer, and I built Medyra on my own — from the PostgreSQL schema and FastAPI backend to the React front end, the design system, and the deploy pipeline — to see whether I could take something as involved as a clinical record from an empty repository to a real, working product. It has no customers and sends no real data; everything you can click here is genuinely functional, running on the same stack a production app would use.
+                I&rsquo;m a product engineer, and I built Medyra end to end on my own — from the PostgreSQL schema and FastAPI backend to the React front end, the design system, and the deploy pipeline. I wanted to see whether I could take something as involved as a clinical record from an empty repository to a polished, working product. Everything you can click here is real and functional, running on the same stack a production app would use.
               </blockquote>
-              <figcaption>— Ashish Kumar, full-stack developer</figcaption>
+              <figcaption>— Ashish Kumar, product engineer</figcaption>
             </motion.figure>
 
             <div className="ml-pgrid">
