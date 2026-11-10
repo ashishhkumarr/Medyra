@@ -161,19 +161,20 @@
 .ml-notes-card .nsec .b{font-size:11px; color:var(--ml-on-dark-mute); line-height:1.5;}
 .ml-notes-cap{margin-top:12px; font-size:12px; color:var(--ml-ink-mute); display:flex; align-items:center; gap:6px;}
 
-/* testimonials (dark) */
+/* how it's built (dark) */
 .ml-testi{background:var(--ml-forest); color:var(--ml-on-dark); border-radius:40px; margin:0 20px; padding:84px 0;}
 @media(max-width:700px){ .ml-testi{margin:0 10px; border-radius:28px;} }
 .ml-testi .ml-sec-head h2{color:#fff;} .ml-testi .ml-sec-head p{color:var(--ml-on-dark-mute);}
-.ml-tgrid{columns:3; column-gap:18px;}
-@media(max-width:900px){ .ml-tgrid{columns:2;} }
-@media(max-width:600px){ .ml-tgrid{columns:1;} }
-.ml-tcard{break-inside:avoid; background:var(--ml-forest-2); border:1px solid var(--ml-line-dark); border-radius:16px; padding:20px; margin-bottom:18px;}
-.ml-stars{display:flex; gap:2px; color:var(--ml-gold); margin-bottom:12px;}
-.ml-tcard .q{font-size:14px; color:var(--ml-on-dark); line-height:1.6;}
-.ml-tcard .who{display:flex; align-items:center; gap:10px; margin-top:16px;}
-.ml-tcard .who .a{width:34px;height:34px;border-radius:50%;background:var(--ml-forest-3);display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--ml-on-dark);}
-.ml-tcard .who .nm{font-size:13px;font-weight:650;} .ml-tcard .who .hd{font-size:11.5px;color:var(--ml-on-dark-mute);}
+.ml-kicker{display:inline-block; font-size:12px; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:#AECB77; margin-bottom:16px;}
+.ml-note{max-width:760px; margin:0 auto 52px; text-align:center;}
+.ml-note blockquote{font-family:var(--ml-serif); font-weight:400; font-size:21px; line-height:1.6; color:var(--ml-on-dark); letter-spacing:-.01em;}
+.ml-note figcaption{margin-top:20px; font-size:14px; font-weight:600; color:#AECB77;}
+@media(max-width:600px){ .ml-note blockquote{font-size:18px;} }
+.ml-pgrid{display:grid; grid-template-columns:repeat(2,1fr); gap:18px;}
+@media(max-width:700px){ .ml-pgrid{grid-template-columns:1fr;} }
+.ml-pcard{background:var(--ml-forest-2); border:1px solid var(--ml-line-dark); border-radius:18px; padding:26px 24px;}
+.ml-pcard h3{font-family:var(--ml-serif); font-weight:600; font-size:18px; color:#fff; margin-bottom:10px; letter-spacing:-.01em;}
+.ml-pcard p{font-size:14px; color:var(--ml-on-dark-mute); line-height:1.6;}
 
 /* faq */
 .ml-faq{max-width:780px; margin:0 auto; border-top:1px solid var(--ml-line);}

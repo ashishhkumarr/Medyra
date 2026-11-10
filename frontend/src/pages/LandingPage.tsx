@@ -11,8 +11,6 @@ import {
   Instagram,
   Linkedin,
   Plus,
-  Star,
-  Stethoscope,
   Twitter,
   X
 } from "lucide-react";
@@ -44,16 +42,25 @@ const Glyph = ({ className = "ml-glyph" }: { className?: string }) => (
 );
 
 /* ---------------- data ---------------- */
-const CLINICS = ["Riverside Family Health", "Lakeview Pediatrics", "Summit Care Clinic", "Northgate Medical"];
+const TECH = ["React", "TypeScript", "FastAPI", "PostgreSQL", "Docker"];
 
-const TESTIMONIALS = [
-  { q: "We went from three paper binders to one screen. Intake that used to take ten minutes now takes two.", n: "Dr. Nadia Fernandes", r: "Family medicine · Riverside Health" },
-  { q: "The chart finally matches how I actually see patients — notes, vitals, and history all in one place.", n: "Dr. Arjun Rao", r: "Internal medicine" },
-  { q: "Setup took an afternoon, not a quarter. My front desk picked it up the same day with no training.", n: "Priya Nair", r: "Practice manager · Summit Care" },
-  { q: "Signing a note and knowing it's locked and traceable afterward gives me real peace of mind.", n: "Dr. Helena Costa", r: "General practice" },
-  { q: "The vitals trends are the thing I didn't know I needed — I can spot a BP creeping up at a glance.", n: "Dr. Samuel Boateng", r: "Cardiology" },
-  { q: "It's the first clinic software I've used that didn't come with a training manual.", n: "Leah Mwangi", r: "Nurse practitioner" },
-  { q: "Free, clean, and it just works. For a small practice, that's genuinely everything.", n: "Dr. Tomás Herrera", r: "Pediatrics" }
+const PRINCIPLES = [
+  {
+    t: "Structured the way clinicians think",
+    d: "Visits follow the SOAP note — subjective, objective, assessment, plan — and vitals are captured once at intake, then flow into the chart. The structure mirrors how care actually gets documented."
+  },
+  {
+    t: "Safe in the small details",
+    d: "Two patients with the same name are told apart by date of birth and contact before you book. Signed notes lock and timestamp. Demo mode never sends a real message."
+  },
+  {
+    t: "Trends, not just snapshots",
+    d: "Vitals are plotted across every visit, so a blood pressure creeping up over months is visible at a glance instead of buried in a single reading."
+  },
+  {
+    t: "Built like a production system",
+    d: "Tenant-isolated data, a typed FastAPI backend, PostgreSQL, an automated test suite, containerized with Docker and deployed on real cloud infrastructure — the foundations a shipping product runs on."
+  }
 ];
 
 const FAQS = [
@@ -130,18 +137,6 @@ const STORIES: Story[] = [
   }
 ];
 
-/* ---------------- small UI ---------------- */
-const Stars = () => (
-  <div className="ml-stars" aria-label="5 out of 5 stars">
-    {Array.from({ length: 5 }).map((_, i) => (
-      <Star key={i} size={14} fill="currentColor" strokeWidth={0} />
-    ))}
-  </div>
-);
-
-const initials = (name: string) =>
-  name.replace(/^Dr\.?\s+/, "").split(" ").filter(Boolean).slice(0, 2).map((p) => p[0]).join("").toUpperCase();
-
 /* ---------------- page ---------------- */
 const LandingPage = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -181,7 +176,7 @@ const LandingPage = () => {
               <a href="#features">Product</a>
               <a href="#care">Why Medyra</a>
               <a href="#stories">Resources</a>
-              <a href="#testimonials">Customers</a>
+              <a href="#how-its-built">How it&rsquo;s built</a>
               <a href="#faq">FAQ</a>
             </nav>
             <div className="ml-nav-cta">
@@ -205,12 +200,10 @@ const LandingPage = () => {
                 <Link className="ml-btn ml-btn-outline" to={LOGIN_URL}>View the demo</Link>
               </div>
               <div className="ml-trust">
-                <p className="ml-tl">Built around the way small clinics actually work:</p>
+                <p className="ml-tl">Built with a modern, production-grade stack:</p>
                 <div className="ml-logos">
-                  {CLINICS.map((c) => (
-                    <span className="ml-logo" key={c}>
-                      <Stethoscope size={16} /> {c}
-                    </span>
+                  {TECH.map((t) => (
+                    <span className="ml-logo" key={t}>{t}</span>
                   ))}
                 </div>
               </div>
@@ -357,22 +350,27 @@ const LandingPage = () => {
           </section>
         </div>
 
-        {/* TESTIMONIALS */}
-        <section className="ml-testi" id="testimonials">
+        {/* HOW IT'S BUILT */}
+        <section className="ml-testi" id="how-its-built">
           <div className="ml-wrap">
             <motion.div className="ml-sec-head" {...reveal()}>
-              <h2>Loved by small practices</h2>
-              <p>Clinics of every size use Medyra to simplify their day, document care, and keep patients close.</p>
+              <span className="ml-kicker">A portfolio project · built solo</span>
+              <h2>Built by one developer, end to end.</h2>
+              <p>Medyra is a demonstration project, not a company — so there are no customers to quote. What there is: the clinical and engineering reasoning behind every part of it.</p>
             </motion.div>
-            <div className="ml-tgrid">
-              {TESTIMONIALS.map((t, i) => (
-                <motion.div className="ml-tcard" key={t.n} {...reveal((i % 3) * 0.05)}>
-                  <Stars />
-                  <p className="q">&ldquo;{t.q}&rdquo;</p>
-                  <div className="who">
-                    <span className="a">{initials(t.n)}</span>
-                    <div><div className="nm">{t.n}</div><div className="hd">{t.r}</div></div>
-                  </div>
+
+            <motion.figure className="ml-note" {...reveal(0.05)}>
+              <blockquote>
+                I&rsquo;m a full-stack developer, and I built Medyra on my own — from the PostgreSQL schema and FastAPI backend to the React front end, the design system, and the deploy pipeline — to see whether I could take something as involved as a clinical record from an empty repository to a real, working product. It has no customers and sends no real data; everything you can click here is genuinely functional, running on the same stack a production app would use.
+              </blockquote>
+              <figcaption>— Ashish Kumar, full-stack developer</figcaption>
+            </motion.figure>
+
+            <div className="ml-pgrid">
+              {PRINCIPLES.map((p, i) => (
+                <motion.div className="ml-pcard" key={p.t} {...reveal((i % 2) * 0.05)}>
+                  <h3>{p.t}</h3>
+                  <p>{p.d}</p>
                 </motion.div>
               ))}
             </div>
@@ -481,7 +479,7 @@ const LandingPage = () => {
                 </div>
               </div>
               <div className="ml-fcol"><h4>Product</h4><a href="#features">Scheduling</a><a href="#features">Charting</a><a href="#features">Vitals</a><a href="#features">Analytics</a></div>
-              <div className="ml-fcol"><h4>Resources</h4><a href="#stories">Guidance</a><a href="#faq">FAQ</a><a href="#testimonials">Customers</a></div>
+              <div className="ml-fcol"><h4>Resources</h4><a href="#stories">Guidance</a><a href="#faq">FAQ</a><a href="#how-its-built">How it&rsquo;s built</a></div>
               <div className="ml-fcol"><h4>Get started</h4><Link to={DEMO_URL}>Create a clinic login</Link><Link to={LOGIN_URL}>Log in</Link><Link to={DEMO_URL}>Open the demo</Link></div>
             </div>
             <div className="ml-foot-base">
