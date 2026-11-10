@@ -361,9 +361,9 @@ const LandingPage = () => {
 
             <motion.figure className="ml-note" {...reveal(0.05)}>
               <blockquote>
-                I&rsquo;m a product engineer, and I built Medyra end to end on my own — from the PostgreSQL schema and FastAPI backend to the React front end, the design system, and the deploy pipeline. I wanted to see whether I could take something as involved as a clinical record from an empty repository to a polished, working product. Everything you can click here is real and functional, running on the same stack a production app would use.
+                I&rsquo;m a Software Engineer, and I built Medyra end to end on my own — from the PostgreSQL schema and FastAPI backend to the React front end, the design system, and the deploy pipeline. I wanted to see whether I could take something as involved as a clinical record from an empty repository to a polished, working product. Everything you can click here is real and functional, running on the same stack a production app would use.
               </blockquote>
-              <figcaption>— Ashish Kumar, product engineer</figcaption>
+              <figcaption>— Ashish Kumar, Software Engineer</figcaption>
             </motion.figure>
 
             <div className="ml-pgrid">
