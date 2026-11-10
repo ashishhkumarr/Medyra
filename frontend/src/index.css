@@ -362,6 +362,47 @@ body {
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Mobile rendering fixes.
+   iOS Safari re-samples backdrop-filter (blur) and mix-blend layers on every
+   scroll frame, which shows up as flickering/"blinking" cards, bars and images
+   as you scroll. On small screens we drop the blur and the animated ambient
+   orbs, and make the frosted surfaces fully opaque so they stay crisp and
+   stable. The glass look is kept on larger screens where it renders smoothly.
+--------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  *,
+  *::before,
+  *::after {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  /* animated, soft-light/screen blended glows flicker on iOS during scroll */
+  .ambient-orb {
+    display: none !important;
+  }
+
+  /* with the blur gone, make frosted surfaces solid so nothing bleeds through */
+  .glass-card,
+  .glass-panel {
+    background-color: rgb(var(--glass-card));
+  }
+  .glass-input {
+    background-color: rgb(var(--glass-input));
+  }
+
+  /* promote the sticky landing nav to its own layer so it composites cleanly */
+  .ml-nav {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
 @layer base {
   :where(a, button, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible {
     outline: 2px solid rgb(var(--color-primary) / 0.55);
